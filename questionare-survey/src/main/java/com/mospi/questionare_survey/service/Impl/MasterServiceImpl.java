@@ -5,6 +5,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.mospi.questionare_survey.entity.MasMenu;
 import com.mospi.questionare_survey.exception.SDDException;
 import com.mospi.questionare_survey.helperUtil.ErrorCode;
+import com.mospi.questionare_survey.helperUtil.HelperUtils;
 import com.mospi.questionare_survey.helperUtil.ResponseUtils;
 import com.mospi.questionare_survey.repository.MasMenuRepo;
 import com.mospi.questionare_survey.request.CreateMenuReq;
@@ -18,9 +19,11 @@ import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.awt.print.Pageable;
 import java.util.List;
 
 @Service
@@ -29,6 +32,8 @@ public class MasterServiceImpl implements MasterService {
 
     private final Logger logger = LoggerFactory.getLogger(MasterServiceImpl.class);
 
+    @Autowired
+    private HelperUtils helperUtill;
     @Autowired
     private MasMenuRepo masMenuRepo;
 
@@ -133,47 +138,45 @@ public class MasterServiceImpl implements MasterService {
     }
 
 
+//    @Override
+//    public ApiResponseWithPageable<List<MasMenu>> getAllMenus(GetMenuReq request) {
+//        try {
+//            int page = (request.getPage() != null && request.getPage() >= 0) ? request.getPage().intValue() : 0;
+//            int limit = (request.getLimit() != null && request.getLimit() > 0) ? request.getLimit().intValue() : 10;
+//
+//            org.springframework.data.domain.Pageable pageable =
+//                    org.springframework.data.domain.PageRequest.of(page, limit, org.springframework.data.domain.Sort.by("menuOrder").ascending());
+//
+//            org.springframework.data.domain.Page<MasMenu> menuPage = masMenuRepo.findAll(pageable);
+//
+//            List<MasMenu> menus = menuPage.getContent();
+//            Long totalElements = menuPage.getTotalElements();
+//            int totalPages = menuPage.getTotalPages();
+//            int currentPage = menuPage.getNumber();
+//            int pageSize = menuPage.getSize();
+//
+//            return new ApiResponseWithPageable<>(
+//                    menus,
+//                    true,
+//                    "Menus fetched successfully",
+//                    totalElements,
+//                    totalPages,
+//                    currentPage,
+//                    pageSize
+//            );
+//
+//        } catch (SDDException e) {
+//            throw e;
+//        } catch (Exception e) {
+//            throw new SDDException(false, ErrorCode.AU1000);
+//        }
+//    }
+
+
     @Override
     public ApiResponseWithPageable<List<MasMenu>> getAllMenus(GetMenuReq request) {
-        try {
-            int page = (request.getPage() != null && request.getPage() >= 0) ? request.getPage().intValue() : 0;
-            int limit = (request.getLimit() != null && request.getLimit() > 0) ? request.getLimit().intValue() : 10;
 
-            org.springframework.data.domain.Pageable pageable =
-                    org.springframework.data.domain.PageRequest.of(page, limit, org.springframework.data.domain.Sort.by("menuOrder").ascending());
-
-            org.springframework.data.domain.Page<MasMenu> menuPage = masMenuRepo.findAll(pageable);
-
-            List<MasMenu> menus = menuPage.getContent();
-            Long totalElements = menuPage.getTotalElements();
-            int totalPages = menuPage.getTotalPages();
-            int currentPage = menuPage.getNumber();
-            int pageSize = menuPage.getSize();
-
-            return new ApiResponseWithPageable<>(
-                    menus,
-                    true,
-                    "Menus fetched successfully",
-                    totalElements,
-                    totalPages,
-                    currentPage,
-                    pageSize
-            );
-
-        } catch (SDDException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new SDDException(false, ErrorCode.AU1000);
-        }
-    }
-
-
-    @Override
-    public ApiResponseWithPageable<List<MasMenu>> getAllMenus(GetMenuReq request) {
-
-        logger.info("Fetching Menus. Page: {}, Limit: {}",
-                request.getPage(),
-                request.getLimit());
+        logger.info("Fetching Menus. Page: {}, Limit: {}", request.getPage(), request.getLimit());
 
         try {
 
@@ -183,7 +186,7 @@ public class MasterServiceImpl implements MasterService {
                             request.getLimit()
                     );
 
-            Page<MenuMaster> menusPage;
+            Page<MasMenu> menusPage;
 
             if (request.getLabel() != null &&
                     !request.getLabel().trim().isEmpty()) {
