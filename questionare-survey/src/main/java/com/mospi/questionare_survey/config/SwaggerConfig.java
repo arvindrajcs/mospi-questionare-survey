@@ -13,6 +13,7 @@ import io.swagger.v3.oas.models.security.SecurityScheme;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+//http://localhost:8081/swagger-ui/index.html
 
 @Configuration
 public class SwaggerConfig {
@@ -30,13 +31,13 @@ public class SwaggerConfig {
                         addList("Bearer Authentication"))
                 .components(new Components().addSecuritySchemes
                         ("Bearer Authentication", createAPIKeyScheme()))
-                .info(new Info().title("LMS SYSTEM")
-                        .description("LMS System")
+                .info(new Info().title("QUESTIONARE SURVEY SYSTEM")
+                        .description("QUESTIONARE SURVEY  SYSTEM")
                         .version("1.0")
-                        .contact(new Contact().name("ARIGEN TECHNOLOGY PVT LTD.").email("info@arigen.com").url("www.arigentechnology.com"))
+                        .contact(new Contact().name("MOSPI").email("info@mospsi.com").url("www.mospi.gov.in"))
                         .license(new License().name("Apache 2.0").url("http://springdoc.org")))
                 .externalDocs(new ExternalDocumentation()
-                        .description("lms System")
+                        .description("QUESTIONARE SURVEY SYSTEM")
                         .url("https://springshop.wiki.github.org/docs"));
 
     }

@@ -10,9 +10,9 @@ public class DataBaseConnectionConfig {
 
     private static final String DB_DRIVER_CLASS = "org.postgresql.Driver";
 
-    private static final String DB_USERNAME = "mmudevdb";
-    private static final String DB_PASSWORD = "mmudevdb=";
-    private static final String DB_URL = "jdbc:postgresql://localhost:5432/LMS_DB";
+    private static final String DB_USERNAME = "postgres";
+    private static final String DB_PASSWORD = "root456=";
+    private static final String DB_URL = "jdbc:postgresql://10.24.89.9:5432/questionare_db";
 
     public static Connection getConnection() {
 
@@ -37,7 +37,7 @@ public class DataBaseConnectionConfig {
             Class.forName("org.postgresql.Driver");
             con =
                     DriverManager.getConnection(
-                            "jdbc:postgresql://localhost:5432/LMS_DB", DB_USERNAME, DB_PASSWORD);
+                            "jdbc:postgresql://10.24.89.9:5432/questionare_db", DB_USERNAME, DB_PASSWORD);
             System.out.println("databaseConnection===============" + con.toString());
         } catch (Exception e) {
             // TODO Auto-generated catch block
