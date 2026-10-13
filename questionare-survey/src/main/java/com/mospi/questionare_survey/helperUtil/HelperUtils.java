@@ -1,12 +1,12 @@
 package com.mospi.questionare_survey.helperUtil;
 
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.stereotype.Component;
 
-import java.awt.print.Pageable;
-
+@Component
 public class HelperUtils {
-
 
     public Pageable getPageable(Long page, Long limit) {
 
@@ -16,10 +16,9 @@ public class HelperUtils {
         return PageRequest.of(
                 pageNo - 1,
                 pageSize,
-                Sort.by("createdDate").descending()
+                Sort.by("menuOrder").ascending() // Or your preferred sort field
         );
     }
-
 
     public Pageable getPageable(Long page, Long limit, Sort sort) {
 

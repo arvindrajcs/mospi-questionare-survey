@@ -1,6 +1,8 @@
 package com.mospi.questionare_survey.repository;
 
 import com.mospi.questionare_survey.entity.MappingRoleMenu;
+import com.mospi.questionare_survey.entity.MasMenu;
+import com.mospi.questionare_survey.entity.MasRole;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -21,4 +23,8 @@ public interface MappingRoleMenuRepo extends JpaRepository<MappingRoleMenu, Long
 
     // Specific role aur menu ki mapping find karne ke liye
     Optional<MappingRoleMenu> findByRole_RoleIdAndMenu_MenuId(Long roleId, Long menuId);
+
+    boolean existsByRoleAndMenu(MasRole role, MasMenu menu);
+
+    List<MappingRoleMenu> findByRole(MasRole role);
 }
