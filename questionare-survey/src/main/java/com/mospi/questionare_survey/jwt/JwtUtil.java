@@ -14,6 +14,7 @@ import java.security.Key;
 import java.time.Instant;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -30,26 +31,21 @@ public class JwtUtil {
     @Value("${jwt.issuer}")
     private String issuer;
 
-
-
-
     // ------------------------------------
-    // Generate Access Token
+    // Generate Access Token (Supports Multiple Roles & Active Role)
     // ------------------------------------
-    public String generateAccessToken(UserDetails userDetails, UserInfo userinfo) {
+    public String generateAccessToken(UserDetails userDetails, UserInfo userinfo, String activeRole) {
 
         Instant now = Instant.now();
         Map<String, Object> claims = new HashMap<>();
-        claims.put(
-                "roles",
-                userDetails.getAuthorities()
-                        .stream()
-                        .map(GrantedAuthority::getAuthority)
-                        .collect(Collectors.toList())
-        );
-        // ADD YOUR ROLE NAME & ROLE ID
-        claims.put("roleId", "");
-        claims.put("roleName", "");
+
+        List<String> allRoles = userDetails.getAuthorities()
+                .stream()
+                .map(GrantedAuthority::getAuthority)
+                .collect(Collectors.toList());
+
+        claims.put("roles", allRoles);
+        claims.put("activeRole", activeRole != null ? activeRole : (allRoles.isEmpty() ? "" : allRoles.get(0)));
         claims.put("userId", userinfo.getUserId());
         claims.put("username", userinfo.getUsername());
         claims.put("tokenType", "ACCESS");
@@ -65,12 +61,9 @@ public class JwtUtil {
                 .compact();
     }
 
-
     public boolean validateToken(String token, UserDetails userDetails) {
-
         try {
             Claims claims = getAllClaims(token);
-
             String username = claims.getSubject();
             Date expiration = claims.getExpiration();
 
@@ -78,27 +71,16 @@ public class JwtUtil {
             boolean isNotExpired = expiration.after(new Date());
 
             return isUsernameMatch && isNotExpired;
-
-        } catch (ExpiredJwtException ex) {
-            log.warn("JWT expired for user: {}", ex.getClaims().getSubject());
-            return false;
-
         } catch (JwtException | IllegalArgumentException ex) {
             log.error("Invalid JWT: {}", ex.getMessage());
             return false;
         }
     }
 
-    // =========================================================
-    // Extract Username
-    // =========================================================
     public String getUsernameFromToken(String token) {
         return getAllClaims(token).getSubject();
     }
 
-    // =========================================================
-    // Extract Claims (used internally)
-    // =========================================================
     private Claims getAllClaims(String token) {
         return Jwts.parserBuilder()
                 .setSigningKey(getSigningKey())
@@ -107,55 +89,29 @@ public class JwtUtil {
                 .getBody();
     }
 
-    // ==========================
-    // Extract Claims Securely
-    // ==========================
-
     public Claims getAllClaimsForExternal(String token) {
-
-        Jws<Claims> jws = Jwts
-                .parserBuilder()
+        Jws<Claims> jws = Jwts.parserBuilder()
                 .setSigningKey(getSigningKey())
-                .requireIssuer(issuer)   // IMPORTANT
+                .requireIssuer(issuer)
                 .build()
                 .parseClaimsJws(token);
 
-        // Validate Algorithm
-        String algorithm =
-                jws.getHeader().getAlgorithm();
-
-        if (!SignatureAlgorithm.HS512
-                .getValue()
-                .equals(algorithm)) {
-
-            throw new SecurityException(
-                    "Invalid JWT algorithm");
+        String algorithm = jws.getHeader().getAlgorithm();
+        if (!SignatureAlgorithm.HS512.getValue().equals(algorithm)) {
+            throw new SecurityException("Invalid JWT algorithm");
         }
 
-        Claims claims =
-                jws.getBody();
-
-        // Validate Token Type
-        String tokenType =
-                claims.get("tokenType", String.class);
-
-        if (tokenType == null ||
-                !"ACCESS".equals(tokenType)) {
-
-            throw new SecurityException(
-                    "Invalid token type");
+        Claims claims = jws.getBody();
+        String tokenType = claims.get("tokenType", String.class);
+        if (tokenType == null || !"ACCESS".equals(tokenType)) {
+            throw new SecurityException("Invalid token type");
         }
 
         return claims;
     }
 
-    // ------------------------------------
-    // Signing Key
-    // ------------------------------------
     private Key getSigningKey() {
         byte[] keyBytes = Decoders.BASE64.decode(secret);
         return Keys.hmacShaKeyFor(keyBytes);
     }
-
-
 }

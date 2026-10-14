@@ -1,12 +1,12 @@
 package com.mospi.questionare_survey.service.Impl;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.mospi.questionare_survey.entity.UserDetails;
+import com.mospi.questionare_survey.entity.UserInfo;
 import com.mospi.questionare_survey.exception.SDDException;
 import com.mospi.questionare_survey.helperUtil.ErrorCode;
 import com.mospi.questionare_survey.helperUtil.HelperUtils;
 import com.mospi.questionare_survey.helperUtil.ResponseUtils;
-import com.mospi.questionare_survey.repository.UserDetailsRepo;
+import com.mospi.questionare_survey.repository.UserInfoRepo;
 import com.mospi.questionare_survey.request.CreateUserReq;
 import com.mospi.questionare_survey.request.GetUserReq;
 import com.mospi.questionare_survey.request.UpdateUserReq;
@@ -41,7 +41,7 @@ public class UserServiceImpl implements UserService {
     private HelperUtils helperUtill;
 
     @Autowired
-    private UserDetailsRepo userDetailsRepo;
+    private UserInfoRepo userInfoRepo;
 
 
     @Transactional(rollbackFor = Exception.class)
@@ -49,7 +49,7 @@ public class UserServiceImpl implements UserService {
     public ApiResponse<DefaultResponse> createUser(Long userId, CreateUserReq request) {
 
         try {
-            UserDetails user = new UserDetails();
+            UserInfo user = new UserInfo();
             String encryptedPassword = passwordEncoder.encode(request.getPasswordHash());
             user.setUsername(request.getUsername());
             user.setPasswordHash(encryptedPassword);
@@ -58,7 +58,7 @@ public class UserServiceImpl implements UserService {
             user.setEmail(request.getEmail());
             user.setMobileNumber(request.getMobileNumber());
             user.setCreatedBy(userId);
-            userDetailsRepo.save(user);
+            userInfoRepo.save(user);
             DefaultResponse response = new DefaultResponse();
             response.setMsg("User created successfully.Approval pending");
             return ResponseUtils.createSuccessResponse(response, new TypeReference<DefaultResponse>() {});
@@ -77,9 +77,9 @@ public class UserServiceImpl implements UserService {
     public ApiResponse<DefaultResponse> updateUser(Long userId, UpdateUserReq request) {
 
         try {
-            UserDetails existingUser;
+            UserInfo existingUser;
             if (request.getUserId() != null) {
-                existingUser = userDetailsRepo.findById(request.getUserId())
+                existingUser = userInfoRepo.findById(request.getUserId())
                         .orElseThrow(() -> new SDDException(false, ErrorCode.AU1003));
             }else {
                 throw new SDDException(false, ErrorCode.AU1004);
@@ -101,7 +101,7 @@ public class UserServiceImpl implements UserService {
                     .ifPresent(existingUser::setMobileNumber);
 
             existingUser.setUpdatedBy(userId);
-            userDetailsRepo.save(existingUser);
+            userInfoRepo.save(existingUser);
             DefaultResponse response = new DefaultResponse();
             response.setMsg("User updated successfully");
             return ResponseUtils.createSuccessResponse(response, new TypeReference<DefaultResponse>() {});
@@ -122,12 +122,12 @@ public class UserServiceImpl implements UserService {
     public ApiResponse<DefaultResponse> updateUserStatus(Long userId, UserStatusReq request) {
         try {
 
-            UserDetails existingUser = userDetailsRepo.findById(request.getUserId())
+            UserInfo existingUser = userInfoRepo.findById(request.getUserId())
                     .orElseThrow(() -> new SDDException(false, ErrorCode.AU1003));
 
             existingUser.setIsActive(request.isActive());
             existingUser.setUpdatedBy(userId);
-            userDetailsRepo.save(existingUser);
+            userInfoRepo.save(existingUser);
 
             String message = request.isActive() ? "User activated successfully" : "User deactivated successfully";
             logger.info("User status updated successfully for userId: {}", request.getUserId());
@@ -155,7 +155,7 @@ public class UserServiceImpl implements UserService {
 
             if (request.getUserId() != null) {
                 // Scenario 1: If userId is provided, fetch only that specific user
-                UserDetails user = userDetailsRepo.findById(request.getUserId())
+                UserInfo user = userInfoRepo.findById(request.getUserId())
                         .orElseThrow(() -> new SDDException(false, "User not found for ID: " + request.getUserId()));
 
                 userInfoRespList.add(mapToUserInfoResp(user));
@@ -164,11 +164,11 @@ public class UserServiceImpl implements UserService {
 
             } else {
                 // Scenario 2: If userId is NOT provided, paginate through all users
-                Page<UserDetails> userPage = userDetailsRepo.findAll(pageable);
+                Page<UserInfo> userPage = userInfoRepo.findAll(pageable);
                 totalElements = userPage.getTotalElements();
                 totalPages = userPage.getTotalPages();
 
-                for (UserDetails user : userPage.getContent()) {
+                for (UserInfo user : userPage.getContent()) {
                     userInfoRespList.add(mapToUserInfoResp(user));
                 }
             }
@@ -190,7 +190,7 @@ public class UserServiceImpl implements UserService {
         }
     }
 
-    private UserInfoResp mapToUserInfoResp(UserDetails user) {
+    private UserInfoResp mapToUserInfoResp(UserInfo user) {
         UserInfoResp resp = new UserInfoResp();
         resp.setUserId(user.getUserId());
         resp.setUsername(user.getUsername());

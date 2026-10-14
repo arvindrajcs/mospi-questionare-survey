@@ -34,7 +34,7 @@ public class MappingUserRole {
     // Many mappings belong to one User
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id", nullable = false)
-    private UserDetails user;
+    private UserInfo user;
 
     // Many mappings belong to one Role
     @ManyToOne(fetch = FetchType.LAZY, optional = false)

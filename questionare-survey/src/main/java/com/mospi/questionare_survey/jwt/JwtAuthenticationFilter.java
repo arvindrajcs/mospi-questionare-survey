@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-
+import java.util.List;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
@@ -36,42 +36,32 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             FilterChain chain)
             throws ServletException, IOException {
 
-        String authHeader =
-                request.getHeader("Authorization");
+        String authHeader = request.getHeader("Authorization");
 
-        // No Authorization header
-        if (authHeader == null ||
-                !authHeader.startsWith("Bearer ")) {
-
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             chain.doFilter(request, response);
             return;
         }
 
         try {
+            String token = authHeader.substring(7);
+            Claims claims = jwtUtil.getAllClaimsForExternal(token);
 
-            String token =
-                    authHeader.substring(7);
+            String username = claims.getSubject();
 
-            Claims claims =
-                    jwtUtil.getAllClaimsForExternal(token);
+            // Token se roles list aur active role extract karein
+            @SuppressWarnings("unchecked")
+            List<String> roles = claims.get("roles", List.class);
+            String activeRole = claims.get("activeRole", String.class);
 
-            String username =
-                    claims.getSubject();
+            if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
 
-            String role =
-                    claims.get("roleName", String.class);
-
-            if (username != null &&
-                    SecurityContextHolder
-                            .getContext()
-                            .getAuthentication() == null) {
-
-                UserInfoPrincipal principal =
-                        new UserInfoPrincipal(
-                                username,
-                                role,
-                                null
-                        );
+                UserInfoPrincipal principal = new UserInfoPrincipal(
+                        username,
+                        roles,
+                        activeRole,
+                        null
+                );
 
                 UsernamePasswordAuthenticationToken authentication =
                         new UsernamePasswordAuthenticationToken(
@@ -81,44 +71,21 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         );
 
                 authentication.setDetails(
-                        new WebAuthenticationDetailsSource()
-                                .buildDetails(request)
+                        new WebAuthenticationDetailsSource().buildDetails(request)
                 );
 
-                SecurityContextHolder
-                        .getContext()
-                        .setAuthentication(authentication);
+                SecurityContextHolder.getContext().setAuthentication(authentication);
             }
 
-        }
-
-        // Token expired
-        catch (ExpiredJwtException ex) {
-
+        } catch (ExpiredJwtException ex) {
             logger.warn("JWT expired: {}", ex);
-
             SecurityContextHolder.clearContext();
-
-            response.sendError(
-                    HttpServletResponse.SC_UNAUTHORIZED,
-                    "JWT expired"
-            );
-
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "JWT expired");
             return;
-        }
-
-        // Invalid token
-        catch (Exception ex) {
-
+        } catch (Exception ex) {
             logger.error("JWT authentication failed: {}", ex);
-
             SecurityContextHolder.clearContext();
-
-            response.sendError(
-                    HttpServletResponse.SC_UNAUTHORIZED,
-                    "Invalid JWT token"
-            );
-
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid JWT token");
             return;
         }
 

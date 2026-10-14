@@ -44,7 +44,7 @@ public class MappingServiceImpl implements MappingService {
     private MappingRoleMenuRepo mappingRoleMenuRepo;
 
     @Autowired
-    private UserDetailsRepo userDetailsRepo;
+    private UserInfoRepo userInfoRepo;
 
     @Autowired
     private MappingUserRoleRepo mappingUserRoleRepo;
@@ -202,7 +202,7 @@ public class MappingServiceImpl implements MappingService {
             if (request.getRoleId() == null || request.getRoleId().isEmpty()) {
                 throw new SDDException(false, "Role ID list cannot be empty");
             }
-            UserDetails user = userDetailsRepo.findById(request.getUserId())
+            UserInfo user = userInfoRepo.findById(request.getUserId())
                     .orElseThrow(() -> new SDDException(false, "User not found"));
 
             for (Long rollId : request.getRoleId()) {
@@ -267,7 +267,7 @@ public class MappingServiceImpl implements MappingService {
 
             if (request.getUserId() != null) {
                 // Scenario 1: If userId is provided, fetch only that specific user
-                UserDetails user = userDetailsRepo.findById(request.getUserId())
+                UserInfo user = userInfoRepo.findById(request.getUserId())
                         .orElseThrow(() -> new SDDException(false, "User not found for ID: " + request.getUserId()));
 
                 userRoleRespList.add(buildUserRoleResp(user));
@@ -276,11 +276,11 @@ public class MappingServiceImpl implements MappingService {
 
             } else {
                 // Scenario 2: If userId is NOT provided, paginate through all users and group their roles
-                Page<UserDetails> userPage = userDetailsRepo.findAll(pageable);
+                Page<UserInfo> userPage = userInfoRepo.findAll(pageable);
                 totalElements = userPage.getTotalElements();
                 totalPages = userPage.getTotalPages();
 
-                for (UserDetails user : userPage.getContent()) {
+                for (UserInfo user : userPage.getContent()) {
                     userRoleRespList.add(buildUserRoleResp(user));
                 }
             }
@@ -303,7 +303,7 @@ public class MappingServiceImpl implements MappingService {
     }
 
 
-    private UserRoleResp buildUserRoleResp(UserDetails user) {
+    private UserRoleResp buildUserRoleResp(UserInfo user) {
         UserRoleResp resp = new UserRoleResp();
         resp.setUserId(user.getUserId()); // Ensure your UserDetails entity has getUserId() and getUsername()
         resp.setUsername(user.getUsername());

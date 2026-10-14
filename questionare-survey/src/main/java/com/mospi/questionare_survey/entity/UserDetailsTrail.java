@@ -32,7 +32,7 @@ public class UserDetailsTrail {
     // Many audit trails belong to one User
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id", nullable = false, updatable = false)
-    private UserDetails user;
+    private UserInfo user;
 
     @Column(name = "action_type", nullable = false, length = 50)
     private String actionType;

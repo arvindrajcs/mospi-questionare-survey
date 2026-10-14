@@ -6,7 +6,7 @@ import java.sql.SQLException;
 import java.util.Properties;
 
 
-public class DataBaseConnectionConfig {
+public class DatabaseConfig {
 
     private static final String DB_DRIVER_CLASS = "org.postgresql.Driver";
 
