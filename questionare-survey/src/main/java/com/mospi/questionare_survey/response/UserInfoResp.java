@@ -8,7 +8,14 @@ import lombok.*;
 @ToString
 @AllArgsConstructor
 public class UserInfoResp {
+    private Long userId;
     private String username;
-    private String name;
+    private String passwordHash;
+    private String firstName;
+    private String lastName;
+    private String email;
+    private String mobileNumber;
+    private Boolean isActive;
+
 
 }

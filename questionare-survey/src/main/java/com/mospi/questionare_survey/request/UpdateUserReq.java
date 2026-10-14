@@ -9,10 +9,12 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = false)
-public class UserStatusRequest {
-    private Long userId; //Optional
-    private String loginId;
-    private String docPath;
-    private Long flag;
+public class UpdateUserReq {
+    private Long userId;
+    private String passwordHash;
+    private String firstName;
+    private String lastName;
+    private String email;
+    private String mobileNumber;
 
 }

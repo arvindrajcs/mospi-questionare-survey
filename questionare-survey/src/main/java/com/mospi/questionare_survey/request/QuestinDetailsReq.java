@@ -9,14 +9,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = false)
-public class UpdateUserRequest {
-    private Long userId;
-    private String firstName;
-    private String lastName;
-    private Long roleId;
-    private String email;
-    private String mobile;
-    private String remarks;
-    private String docPath;
+public class QuestinDetailsReq {
 
+    private String questionHeading;
+    private Integer displayOrder;
+    private String fieldsData;
 }

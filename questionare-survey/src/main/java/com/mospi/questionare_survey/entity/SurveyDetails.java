@@ -51,6 +51,9 @@ public class SurveyDetails {
     @Column(name = "description", length = 1000)
     private String description;
 
+    @Column(name = "template_name", length = 100)
+    private String templateName;
+
     @Builder.Default
     @Column(name = "is_active", nullable = false)
     private boolean isActive = true;

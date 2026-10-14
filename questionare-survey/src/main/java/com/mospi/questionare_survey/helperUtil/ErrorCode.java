@@ -9,10 +9,10 @@ public enum ErrorCode {
 
 
     AU1000("AU1000", "Invalid Username or Password"),
-
     AU1001("AU1001", "Invalid User , User Not Found"),
-
-    AU1002("AU1002", "Record Not Found");
+    AU1002("AU1002", "Record Not Found"),
+    AU1003("AU1003", "User Not Found"),
+    AU1004("AU1004", "User Id Can Not be null or empty");
 
 
     @Getter
