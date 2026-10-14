@@ -2,16 +2,12 @@ package com.mospi.questionare_survey.service.Impl;
 
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.mospi.questionare_survey.entity.MappingRoleMenu;
-import com.mospi.questionare_survey.entity.MasMenu;
-import com.mospi.questionare_survey.entity.MasRole;
+import com.mospi.questionare_survey.entity.*;
 import com.mospi.questionare_survey.exception.SDDException;
 import com.mospi.questionare_survey.helperUtil.ErrorCode;
 import com.mospi.questionare_survey.helperUtil.HelperUtils;
 import com.mospi.questionare_survey.helperUtil.ResponseUtils;
-import com.mospi.questionare_survey.repository.MappingRoleMenuRepo;
-import com.mospi.questionare_survey.repository.MasMenuRepo;
-import com.mospi.questionare_survey.repository.MasRoleRepo;
+import com.mospi.questionare_survey.repository.*;
 import com.mospi.questionare_survey.request.*;
 import com.mospi.questionare_survey.response.*;
 import com.mospi.questionare_survey.service.MappingService;
@@ -46,6 +42,12 @@ public class MappingServiceImpl implements MappingService {
 
     @Autowired
     private MappingRoleMenuRepo mappingRoleMenuRepo;
+
+    @Autowired
+    private UserDetailsRepo userDetailsRepo;
+
+    @Autowired
+    private MappingUserRoleRepo mappingUserRoleRepo;
 
 
     //**********************MAPPING ROLE-MENU******************************/
@@ -193,18 +195,135 @@ public class MappingServiceImpl implements MappingService {
 
     @Override
     public ApiResponse<DefaultResponse> createUserRoll(Long userId, UserRoleReq request) {
-        return null;
+        try {
+            if (request.getUserId() == null) {
+                throw new SDDException(false, "User ID cannot be null");
+            }
+            if (request.getRoleId() == null || request.getRoleId().isEmpty()) {
+                throw new SDDException(false, "Role ID list cannot be empty");
+            }
+            UserDetails user = userDetailsRepo.findById(request.getUserId())
+                    .orElseThrow(() -> new SDDException(false, "User not found"));
+
+            for (Long rollId : request.getRoleId()) {
+                MasRole roll = masRoleRepo.findById(rollId)
+                        .orElseThrow(() -> new SDDException(false, "Roll not found for ID : " + rollId));
+
+                boolean alreadyMapped = mappingUserRoleRepo.existsByUserAndRole(user, roll);
+                if (alreadyMapped) {
+                    continue; // skip already mapped menu
+                }
+                MappingUserRole obj = new MappingUserRole();
+                obj.setUser(user);
+                obj.setRole(roll);
+                obj.setCreatedBy(userId);
+                mappingUserRoleRepo.save(obj);
+            }
+            DefaultResponse response = new DefaultResponse();
+            response.setMsg("User Role Mapping created successfully");
+            return ResponseUtils.createSuccessResponse(response, new TypeReference<DefaultResponse>() {});
+        } catch (SDDException e) {
+            throw e;
+        } catch (Exception e) {
+            logger.error("Error while creating User Role Mapping", e);
+            throw new SDDException(false, "Unexpected error during User Role Mapping creation");
+        }
     }
 
     @Override
     public ApiResponse<DefaultResponse> updateUserRollStatus(Long userId, UserRoleStatusReq request) {
-        return null;
+        try {
+
+            MappingUserRole existingRole = mappingUserRoleRepo.findById(request.getUserRoleMappingId())
+                    .orElseThrow(() -> new SDDException(false, ErrorCode.AU1002));
+
+            existingRole.setActive(request.isActive());
+            existingRole.setUpdatedBy(userId);
+            mappingUserRoleRepo.save(existingRole);
+
+            String message = request.isActive() ? "User-Role Mapped activated successfully" : "User-Role Mapped deactivated successfully";
+            logger.info("User-Role Mapped status updated successfully for RollId: {}", existingRole.getRole().getRoleId());
+            DefaultResponse defaultResponse = new DefaultResponse(message);
+            return ResponseUtils.createSuccessResponse(defaultResponse);
+
+        } catch (SDDException e) {
+            throw e;
+        } catch (Exception e) {
+            logger.error("Error while updating User-Role Mapped status for userId: {}", userId, e);
+            throw new SDDException(false, "Unexpected error during User-Role Mapped status updating");
+        }
     }
 
     @Override
     public ApiResponseWithPageable<List<UserRoleResp>> getAllUserRoll(GetUserRoleReq request) {
-        return null;
+        logger.info("Fetching User-Role Mappings. UserId: {}, Page: {}, Limit: {}",
+                request.getUserId(), request.getPage(), request.getLimit());
+
+        try {
+            Pageable pageable = helperUtill.getPageable(request.getPage(), request.getLimit());
+            List<UserRoleResp> userRoleRespList = new ArrayList<>();
+            long totalElements = 0;
+            int totalPages = 0;
+
+            if (request.getUserId() != null) {
+                // Scenario 1: If userId is provided, fetch only that specific user
+                UserDetails user = userDetailsRepo.findById(request.getUserId())
+                        .orElseThrow(() -> new SDDException(false, "User not found for ID: " + request.getUserId()));
+
+                userRoleRespList.add(buildUserRoleResp(user));
+                totalElements = 1;
+                totalPages = 1;
+
+            } else {
+                // Scenario 2: If userId is NOT provided, paginate through all users and group their roles
+                Page<UserDetails> userPage = userDetailsRepo.findAll(pageable);
+                totalElements = userPage.getTotalElements();
+                totalPages = userPage.getTotalPages();
+
+                for (UserDetails user : userPage.getContent()) {
+                    userRoleRespList.add(buildUserRoleResp(user));
+                }
+            }
+
+            logger.info("User-Role details fetched successfully");
+            return ResponseUtils.createPageableSuccessResponse(
+                    userRoleRespList,
+                    totalElements,
+                    totalPages,
+                    pageable.getPageNumber() + 1,
+                    pageable.getPageSize()
+            );
+
+        } catch (SDDException e) {
+            throw e;
+        } catch (Exception e) {
+            logger.error("Error while fetching user-role details", e);
+            throw new SDDException(false, "Unexpected error during fetching user-role details");
+        }
     }
+
+
+    private UserRoleResp buildUserRoleResp(UserDetails user) {
+        UserRoleResp resp = new UserRoleResp();
+        resp.setUserId(user.getUserId()); // Ensure your UserDetails entity has getUserId() and getUsername()
+        resp.setUsername(user.getUsername());
+
+        // Fetch mappings for the given user (Assumes you have a repository like mappingUserRoleRepo or userRoleRepo)
+        List<MappingUserRole> mappings = mappingUserRoleRepo.findByUser(user);
+
+        List<RollResponse> rollList = mappings.stream().map(mapping -> {
+            MasRole role = mapping.getRole(); // Assumes mapping links User to MasRole
+            RollResponse rollResp = new RollResponse();
+            rollResp.setRoleId(role.getRoleId());
+            rollResp.setRoleName(role.getRoleName());
+            rollResp.setRoleDescription(role.getRoleDescription()); // Ensure MasRole has getRoleDescription()
+            return rollResp;
+        }).collect(Collectors.toList());
+
+        resp.setRollList(rollList);
+        return resp;
+    }
+
 
 
 

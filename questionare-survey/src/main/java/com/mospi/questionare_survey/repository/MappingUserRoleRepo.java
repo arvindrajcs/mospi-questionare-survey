@@ -1,6 +1,8 @@
 package com.mospi.questionare_survey.repository;
 
 import com.mospi.questionare_survey.entity.MappingUserRole;
+import com.mospi.questionare_survey.entity.MasRole;
+import com.mospi.questionare_survey.entity.UserDetails;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -21,4 +23,8 @@ public interface MappingUserRoleRepo extends JpaRepository<MappingUserRole, Long
 
     // Specific user aur role ki mapping find karne ke liye
     Optional<MappingUserRole> findByUser_UserIdAndRole_RoleId(Long userId, Long roleId);
+
+    boolean existsByUserAndRole(UserDetails user, MasRole roll);
+
+    List<MappingUserRole> findByUser(UserDetails user);
 }
