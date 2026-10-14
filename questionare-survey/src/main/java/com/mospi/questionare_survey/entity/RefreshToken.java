@@ -12,7 +12,7 @@ import java.time.Instant;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "AUTH_REFRESH_TOKEN")
+@Table(name = "REFRESH_TOKEN")
 public class RefreshToken {
 
 //    @JsonIgnore
@@ -24,11 +24,11 @@ public class RefreshToken {
     @Id
     @GeneratedValue(
             strategy = GenerationType.SEQUENCE,
-            generator = "auth_refresh_token_seq_gen"
+            generator = "refresh_token_seq_gen"
     )
     @SequenceGenerator(
-            name = "auth_refresh_token_seq_gen",
-            sequenceName = "AUTH_REFRESH_TOKEN_SEQ",
+            name = "refresh_token_seq_gen",
+            sequenceName = "REFRESH_TOKEN_SEQ",
             allocationSize = 1
     )
     @Column(name = "ID")
@@ -38,7 +38,7 @@ public class RefreshToken {
     private Long userId;
 
     @Column(nullable = true)
-    private String ssoId;
+    private String username;
 
     @Column(nullable = false)
     private String ipAddress;

@@ -14,8 +14,8 @@
     <option name="RECENT_TEMPLATES">
       <list>
         <option value="Enum" />
-        <option value="Interface" />
         <option value="Class" />
+        <option value="Interface" />
       </list>
     </option>
   </component>
@@ -76,10 +76,10 @@
       <recent name="E:\questionare-survey\questionare-survey\src\main\java\com\mospi\questionare_survey\service\Impl" />
     </key>
     <key name="CopyClassDialog.RECENTS_KEY">
+      <recent name="com.mospi.questionare_survey.response" />
       <recent name="com.mospi.questionare_survey.jwt" />
       <recent name="com.mospi.questionare_survey.entity" />
       <recent name="com.mospi.questionare_survey.request" />
-      <recent name="com.mospi.questionare_survey.response" />
     </key>
   </component>
   <component name="RunManager">

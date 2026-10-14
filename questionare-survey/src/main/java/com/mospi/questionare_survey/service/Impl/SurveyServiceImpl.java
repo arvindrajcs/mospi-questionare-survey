@@ -13,6 +13,7 @@ import com.mospi.questionare_survey.response.ApiResponse;
 import com.mospi.questionare_survey.response.DefaultResponse;
 import com.mospi.questionare_survey.service.SurveyService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +24,7 @@ import java.time.LocalDate;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class SurveyServiceImpl implements SurveyService {
 
     private final Logger logger = LoggerFactory.getLogger(SurveyServiceImpl.class);

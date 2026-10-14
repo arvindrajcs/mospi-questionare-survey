@@ -12,6 +12,7 @@ import com.mospi.questionare_survey.request.*;
 import com.mospi.questionare_survey.response.*;
 import com.mospi.questionare_survey.service.MappingService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +28,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class MappingServiceImpl implements MappingService {
 
     private final Logger logger = LoggerFactory.getLogger(MappingServiceImpl.class);

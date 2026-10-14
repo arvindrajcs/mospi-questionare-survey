@@ -15,7 +15,7 @@ public interface UserInfoRepo extends JpaRepository<UserInfo, Long> {
 
     boolean existsByEmail(String email);
 
-    Optional<UserInfo>  findByUsernameIgnoreCase(String username);
+    UserInfo  findByUsernameIgnoreCaseAndIsActive(String username,boolean isActive);
 
     UserInfo findByUsername(String username);
 }

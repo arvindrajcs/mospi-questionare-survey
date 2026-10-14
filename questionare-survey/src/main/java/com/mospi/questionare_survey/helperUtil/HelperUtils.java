@@ -1,5 +1,6 @@
 package com.mospi.questionare_survey.helperUtil;
 
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -31,4 +32,34 @@ public class HelperUtils {
                 sort
         );
     }
+
+    public String getClientIP(HttpServletRequest request) {
+        String[] headers = {
+                "X-Forwarded-For",
+                "Proxy-Client-IP",
+                "WL-Proxy-Client-IP",
+                "HTTP_CLIENT_IP",
+                "HTTP_X_FORWARDED_FOR"
+        };
+        for (String header : headers) {
+            String ip = request.getHeader(header);
+            if (ip != null && !ip.isEmpty() && !"unknown".equalsIgnoreCase(ip)) {
+                ip = ip.split(",")[0].trim();
+
+                // Convert IPv6 localhost to IPv4 localhost
+                if ("0:0:0:0:0:0:0:1".equals(ip) || "::1".equals(ip)) {
+                    return "127.0.0.1";
+                }
+                return ip;
+            }
+        }
+        String ip = request.getRemoteAddr();
+        // Convert IPv6 localhost to IPv4 localhost
+        if ("0:0:0:0:0:0:0:1".equals(ip) || "::1".equals(ip)) {
+            return "127.0.0.1";
+        }
+
+        return ip;
+    }
+
 }
