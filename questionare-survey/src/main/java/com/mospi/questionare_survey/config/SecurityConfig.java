@@ -1,6 +1,6 @@
 package com.mospi.questionare_survey.config;
 
-import org.springframework.beans.factory.annotation.Value;
+import com.mospi.questionare_survey.jwt.JwtAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -22,16 +22,12 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.Arrays;
-import java.util.List;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final UserDetailsService userDetailsService;
-
-    @Value("${app.security.cors.allowed-origins:http://localhost:3000,http://10.68.61.136:3000,https://maayojanatest.rajasthan.gov.in,https://maayojana.rajasthan.gov.in}")
-    private List<String> allowedOrigins;
 
     // ---------------------------------------------------------
     // 1. Password Encoder (LOGIN only)
@@ -95,25 +91,6 @@ public class SecurityConfig {
                                 .requestMatchers(
                                         "/api/v1/auth/authentication/login",
                                         "/api/v1/auth/authentication/refresh",
-                                        "/api/v1/auth/sso/callback",
-//                                "/api/v1/auth/authentication/validate",
-//                                "/api/v1/auth/authentication/user-authorization",
-//                                "/api/v1/auth/master/import-data",
-//                                "/api/v1/auth/user/get-org-type",
-//                                "/api/v1/auth/user/create-user",
-//                                "/api/v1/auth/user/update-user",
-//                                "/api/v1/auth/user/update-status",
-//                                "/api/v1/auth/user/assign-role",
-//                                "/api/v1/auth/role/update-role",
-//                                "/api/v1/auth/user/approve-user",
-//                                "/api/v1/auth/user/approval-pending",
-//                                "/api/v1/auth/user/approval-reject",
-//                                "/api/v1/auth/user/approval-approved",
-//                                "/api/v1/auth/user/users-all",
-//                                "/api/v1/auth/role/all-role",
-//                                "/api/v1/auth/menu/all-menu",
-//                                "/api/v1/auth/role/get-all-role",
-//                                "/api/v1/auth/menu/update-status",
                                         "/v3/api-docs/**",
                                         "/swagger-ui/**",
                                         "/swagger-ui.html",
@@ -148,7 +125,6 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
 
         configuration.setAllowCredentials(true);
-        configuration.setAllowedOrigins(allowedOrigins);
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "Accept", "userId", "X-Requested-With"));
 
@@ -159,27 +135,5 @@ public class SecurityConfig {
 
         return source;
     }
-//    @Bean
-//    public PasswordEncoder passwordEncoder() {
-//        return new BCryptPasswordEncoder();
-//    }
-//
-//    @Bean
-//    public SecurityFilterChain securityFilterChain(
-//            HttpSecurity http) throws Exception {
-//
-//        http
-//                .csrf(csrf -> csrf.disable())
-//                .cors(cors -> cors.disable())
-//                .authorizeHttpRequests(auth -> auth
-//                        .anyRequest().permitAll()
-//                )
-//                .sessionManagement(session ->
-//                        session.sessionCreationPolicy(
-//                                SessionCreationPolicy.STATELESS
-//                        )
-//                );
-//
-//        return http.build();
-//    }
+
 }

@@ -1,7 +1,6 @@
 package com.mospi.questionare_survey.jwt;
 
-import com.rshaa.Auth.entity.AppUser;
-import com.rshaa.Auth.entity.RoleMaster;
+import com.mospi.questionare_survey.entity.UserInfo;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
@@ -10,13 +9,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 
 import java.security.Key;
 import java.time.Instant;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -34,145 +31,12 @@ public class JwtUtil {
     private String issuer;
 
 
-    // ------------------------------------
-    // Generate Access Token COMMON FOR BOTH DB and GUEST
-    // ------------------------------------
-    public String generateAccessToken1(UserDetails userDetails, AppUser appUser) {
-
-        boolean isCitizen = (appUser == null);
-
-        long orgId = 0L;
-        String orgName = "Citizen Of Rajasthan";
-        String orgType = "Citizen";
-        Long isGov = 0L;
-
-        Map<String, Object> claims = new HashMap<>();
-
-        if (!isCitizen) {
-
-            if (appUser.getRole() == null) {
-                throw new IllegalStateException("User role missing");
-            }
-
-            if (appUser.getHospital() != null) {
-                orgId = appUser.getHospital().getHospitalId();
-                orgName = appUser.getHospital().getHospitalName();
-                orgType = "HOSPITAL";
-                isGov = appUser.getHospital().getIsGovernment();
-
-            } else if (appUser.getTpa() != null) {
-                orgType = "TPA";
-                orgId = appUser.getTpa().getTpaId();
-                orgName = appUser.getTpa().getDescription();
-
-            } else if (appUser.getInsurance() != null) {
-                orgType = "INSURANCE";
-                orgId = appUser.getInsurance().getInsuranceId();
-                orgName = appUser.getInsurance().getDescription();
-
-            } else if (appUser.getDistrict() != null) {
-                orgType = "DISTRICT";
-                orgId = appUser.getDistrict().getDistrictCode();
-                orgName = appUser.getDistrict().getDescriptionEnglish();
-
-            } else if (appUser.getGovOrg() != null) {
-                orgType = "RSHAA";
-                orgId = appUser.getGovOrg().getGovOrgId();
-                orgName = appUser.getGovOrg().getDescription();
-            }
-
-            claims.put("roles",
-                    userDetails.getAuthorities()
-                            .stream()
-                            .map(GrantedAuthority::getAuthority)
-                            .toList());
-
-            claims.put("roleId", appUser.getRole().getRoleId());
-            claims.put("roleName", appUser.getRole().getDescription());
-            claims.put("userId", appUser.getUserId());
-            claims.put("LoginSsoId", appUser.getLoginId());
-
-        } else {
-            claims.put("roles", List.of("ROLE_Rajasthan-Citizen"));
-            claims.put("roleId", 17);
-            claims.put("roleName", "Rajasthan-Citizen");
-            claims.put("userId", 0L);
-            claims.put("LoginSsoId", userDetails.getUsername());
-        }
-
-        claims.put("orgId", orgId);
-        claims.put("orgName", orgName);
-        claims.put("orgType", orgType);
-        claims.put("isGov", isGov);
-        claims.put("userType", isCitizen ? "CITIZEN" : "SYSTEM_USER");
-        claims.put("tokenType", "ACCESS");
-
-        Instant now = Instant.now();
-
-        return Jwts.builder()
-                .setHeaderParam("typ", "JWT")
-                .setClaims(claims)
-                .setSubject(userDetails.getUsername())
-                .setIssuer(issuer)
-                .setIssuedAt(Date.from(now))
-                .setExpiration(Date.from(now.plusMillis(accessExpirationMs)))
-                .signWith(getSigningKey(), SignatureAlgorithm.HS512)
-                .compact();
-    }
 
 
     // ------------------------------------
     // Generate Access Token
     // ------------------------------------
-    public String generateAccessToken(UserDetails userDetails, AppUser appUser) {
-
-        long orgId = 0L;
-        String orgName = "";
-        String orgType = "";
-        Long isGov = 0L;
-
-        if (appUser.getHospital() != null
-                && appUser.getHospital().getHospitalId() != null) {
-
-            orgId = appUser.getHospital().getHospitalId();
-            orgName = appUser.getHospital().getHospitalName();
-            orgType = "HOSPITAL";
-            isGov = appUser.getHospital().getIsGovernment();
-
-        } else if (appUser.getTpa() != null
-                && appUser.getTpa().getTpaId() != null) {
-
-            orgId = appUser.getTpa().getTpaId();
-            orgName = appUser.getTpa().getDescription();
-            orgType = "TPA";
-
-        } else if (appUser.getInsurance() != null
-                && appUser.getInsurance().getInsuranceId() != null) {
-
-            orgId = appUser.getInsurance().getInsuranceId();
-            orgName = appUser.getInsurance().getDescription();
-            orgType = "INSURANCE";
-
-        } else if (appUser.getDistrict() != null
-                && appUser.getDistrict().getDistrictCode() != null) {
-
-            orgId = appUser.getDistrict().getDistrictCode();
-            orgName = appUser.getDistrict().getDescriptionEnglish();
-            orgType = "DISTRICT";
-        }
-        else if (appUser.getGovOrg() != null
-                && appUser.getGovOrg().getGovOrgId() != null) {
-
-            orgId = appUser.getGovOrg().getGovOrgId();
-            orgName = appUser.getGovOrg().getDescription();
-            orgType = "RSHAA";
-        }else {
-//            throw new SDDException(false, "User must belong to exactly one organization");
-            orgId = 0L;
-            orgName = "Citizen Of Rajasthan";
-            orgType = "Citizen";
-        }
-
+    public String generateAccessToken(UserDetails userDetails, UserInfo userinfo) {
 
         Instant now = Instant.now();
         Map<String, Object> claims = new HashMap<>();
@@ -184,95 +48,10 @@ public class JwtUtil {
                         .collect(Collectors.toList())
         );
         // ADD YOUR ROLE NAME & ROLE ID
-        claims.put("orgId", orgId);
-        claims.put("orgName", orgName);
-        claims.put("orgType", orgType);
-        claims.put("isGov", isGov);
-        claims.put("roleId", appUser.getRole().getRoleId());
-        claims.put("roleName", appUser.getRole().getDescription());
-        claims.put("userId", appUser.getUserId());
-        claims.put("LoginSsoId", appUser.getLoginId());
-        claims.put("tokenType", "ACCESS");
-
-        return Jwts.builder()
-                .setHeaderParam("typ", "JWT")
-                .setClaims(claims)
-                .setSubject(userDetails.getUsername())       // loginId comes from AppUserPrincipal
-                .setIssuer(issuer)
-                .setIssuedAt(Date.from(now))
-                .setExpiration(Date.from(now.plusMillis(accessExpirationMs)))
-                .signWith(getSigningKey(), SignatureAlgorithm.HS512)
-                .compact();
-    }
-
-
-
-    // ------------------------------------
-    // Generate Access Token For Citizen
-    // ------------------------------------
-    public String generateAccessTokenForCitizen(String ssoId) {
-
-        long orgId = 0L;
-        String orgName = "Citizen Of Rajasthan";
-        String orgType = "Citizen";
-
-
-        Instant now = Instant.now();
-        Map<String, Object> claims = new HashMap<>();
-        claims.put(
-                "roles",
-                List.of("ROLE_Rajasthan-Citizen")
-        );
-        // ADD YOUR ROLE NAME & ROLE ID
-        claims.put("orgId", orgId);
-        claims.put("orgName", orgName);
-        claims.put("orgType", orgType);
-        claims.put("roleId", 17);
-        claims.put("roleName", "Rajasthan-Citizen");
-        claims.put("userId", 0L);
-        claims.put("LoginSsoId", ssoId);
-        claims.put("tokenType", "ACCESS");
-
-        return Jwts.builder()
-                .setHeaderParam("typ", "JWT")
-                .setClaims(claims)
-                .setSubject(ssoId)
-                .setIssuer(issuer)
-                .setIssuedAt(Date.from(now))
-                .setExpiration(Date.from(now.plusMillis(accessExpirationMs)))
-                .signWith(getSigningKey(), SignatureAlgorithm.HS512)
-                .compact();
-    }
-
-    public String generateAccessTokenForGuestRole(UserDetails userDetails, RoleMaster guestRole) {
-
-        long orgId = 0L;
-        String orgName = "Citizen Of Rajasthan";
-        String orgType = "Citizen";
-
-        String roleName = "Rajasthan-Citizen";
-        Long roleId = 17L;
-
-        if (guestRole != null) {
-            if (StringUtils.hasText(guestRole.getDescription())) {
-                roleName = guestRole.getDescription();
-            }
-            if (guestRole.getRoleId() != null) {
-                roleId = guestRole.getRoleId();
-            }
-        }
-
-        Instant now = Instant.now();
-        Map<String, Object> claims = new HashMap<>();
-        claims.put("roles", List.of("ROLE_" + roleName));
-        claims.put("orgId", orgId);
-        claims.put("orgName", orgName);
-        claims.put("orgType", orgType);
-        claims.put("roleId", roleId);
-        claims.put("roleName", roleName);
-        claims.put("userId", 0L);
-        claims.put("LoginSsoId", userDetails.getUsername());
-        claims.put("userType", "CITIZEN");
+        claims.put("roleId", "");
+        claims.put("roleName", "");
+        claims.put("userId", userinfo.getUserId());
+        claims.put("username", userinfo.getUsername());
         claims.put("tokenType", "ACCESS");
 
         return Jwts.builder()
@@ -286,36 +65,6 @@ public class JwtUtil {
                 .compact();
     }
 
-
-    // =========================================================
-    // IMPROVEMENT 1: Validate token WITH UserDetails
-    // =========================================================
-
-    // =========================================================
-// Validate token WITH username (for SSO / Citizen)
-// =========================================================
-    public boolean validateToken1(String token, String username) {
-
-        try {
-            Claims claims = getAllClaims(token);
-
-            String extractedUsername = claims.getSubject();
-            Date expiration = claims.getExpiration();
-
-            boolean isUsernameMatch = extractedUsername.equals(username);
-            boolean isNotExpired = expiration.after(new Date());
-
-            return isUsernameMatch && isNotExpired;
-
-        } catch (ExpiredJwtException ex) {
-            log.warn("JWT expired for user: {}", ex.getClaims().getSubject());
-            return false;
-
-        } catch (JwtException | IllegalArgumentException ex) {
-            log.error("Invalid JWT: {}", ex.getMessage());
-            return false;
-        }
-    }
 
     public boolean validateToken(String token, UserDetails userDetails) {
 

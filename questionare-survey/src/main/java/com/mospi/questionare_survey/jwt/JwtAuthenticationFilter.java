@@ -66,8 +66,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                             .getContext()
                             .getAuthentication() == null) {
 
-                AppUserPrincipal principal =
-                        new AppUserPrincipal(
+                UserInfoPrincipal principal =
+                        new UserInfoPrincipal(
                                 username,
                                 role,
                                 null

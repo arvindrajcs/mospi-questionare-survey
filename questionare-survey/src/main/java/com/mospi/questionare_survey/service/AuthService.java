@@ -8,7 +8,6 @@ import com.mospi.questionare_survey.response.AuthResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-import java.util.List;
 
 public interface AuthService {
 
