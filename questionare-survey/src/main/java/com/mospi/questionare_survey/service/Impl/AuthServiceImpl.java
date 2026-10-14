@@ -2,15 +2,31 @@ package com.mospi.questionare_survey.service.Impl;
 
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.mospi.questionare_survey.request.AuthRequest;
+import com.mospi.questionare_survey.response.ApiResponse;
+import com.mospi.questionare_survey.response.AuthResponse;
 import com.mospi.questionare_survey.service.AuthService;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Locale;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -20,794 +36,309 @@ import java.util.stream.Collectors;
 public class AuthServiceImpl implements AuthService {
 
 
-//    @Transactional(rollbackFor = Exception.class)
-//    @Override
-//    public ApiResponse<DefaultResponse> createUser(Long userId,CreateUserRequest request) {
-//        ValidationUtil.validateCreateUserRequest(request);
-//        try {
-//            AppUser userObj= validationUtilClass.getUserDetails(userId);
-//            if(userObj.getRole() == null || userObj.getRole().getDescription() == null || !userObj.getRole().getDescription().equalsIgnoreCase("Super-Admin")){
-//                throw new SDDException(false, ErrorCode.AU1013);
-//            }
-//
-////            byte[] aesKey = helperUtill.decryptAESKey(request.getKey());
-////
-////            String loginId = helperUtill.decryptData(request.getLoginId(), aesKey);
-////            String password = helperUtill.decryptData(request.getPassword(), aesKey);
-//
-//
-//            String loginId = request.getLoginId();
-//            String password = request.getPassword();
-//
-//            if (!password.matches(PASSWORD_REGEX)) {
-//                throw new SDDException(false,
-//                        "Password must have minimum 7 characters, 1 uppercase letter, 1 number, and 1 special symbol");
-//            }
-//            // Unique LoginId check
-//            if (loginId != null &&
-//                    userRepo.findByLoginIdIgnoreCase(loginId).isPresent()) {
-//                throw new SDDException(false, ErrorCode.AU1016);
-//            }
-//            // Unique Mobile check
-//            if (request.getMobile() != null &&
-//                    userRepo.findByMobile(request.getMobile()).isPresent()) {
-//                throw new SDDException(false, ErrorCode.AU1017);
-//            }
-//            // Unique Email check
-//            if (request.getEmail() != null &&
-//                    userRepo.findByEmailIgnoreCase(request.getEmail()).isPresent()) {
-//                throw new SDDException(false, ErrorCode.AU1018);
-//            }
-//            // Copy Request → Entity
-//            AppUser appUser = new AppUser();
-//
-//            if (request.getOrgType() != null && request.getOrgType().equalsIgnoreCase("HOSPITAL") ) {
-//
-//                HospitalMaster hospitalObj = hospitalMasterRepository.findById(request.getOrgId())
-//                        .orElseThrow(() -> new SDDException(false, ErrorCode.AU1025));
-//                appUser.setHospital(hospitalObj);
-//
-//            } else if (request.getOrgType() != null && request.getOrgType().equalsIgnoreCase("TPA") ) {
-//
-//                TpaMaster tpaObj = tpaRepository.findById(request.getOrgId())
-//                        .orElseThrow(() -> new SDDException(false, ErrorCode.AU1024));
-//                appUser.setTpa(tpaObj);
-//
-//            } else if (request.getOrgType() != null && request.getOrgType().equalsIgnoreCase("INSURANCE") ) {
-//
-//                InsuranceMaster insuranceObj = insuranceRepository.findById(request.getOrgId())
-//                        .orElseThrow(() -> new SDDException(false, ErrorCode.AU1023));
-//                appUser.setInsurance(insuranceObj);
-//
-//            } else if (request.getOrgType() != null && request.getOrgType().equalsIgnoreCase("DISTRICT") ) {
-//
-//                DistrictMaster districtObj = districtMasterRepository.findById(request.getOrgId())
-//                        .orElseThrow(() -> new SDDException(false, ErrorCode.AU1022));
-//                appUser.setDistrict(districtObj);
-//
-//            } else if (request.getOrgType() != null && request.getOrgType().equalsIgnoreCase("RSHAA") ) {
-//
-//                GovOrgMaster govObj = govOrgRepository.findById(request.getOrgId())
-//                        .orElseThrow(() -> new SDDException(false, ErrorCode.AU1026));
-//                appUser.setGovOrg(govObj);
-//
-//            }else {
-//                throw new SDDException(false, "User must belong to exactly one organization");
-//            }
-//
-//            RoleMaster roleObj = roleMasterRepository.findById(request.getRoleId())
-//                    .orElseThrow(() -> new SDDException(false, ErrorCode.AU1015));
-//
-//
-//
-//            String encryptedPassword = passwordEncoder.encode(password);
-//            appUser.setFirstName(request.getFirstName());
-//            appUser.setLastName(request.getLastName());
-//            appUser.setPassword(encryptedPassword);
-//            appUser.setRole(roleObj);
-//            appUser.setLoginId(loginId);
-//            appUser.setEmail(request.getEmail());
-//            appUser.setMobile(request.getMobile());
-//            appUser.setRemarks(request.getRemarks());
-//            appUser.setDocPath(request.getDocPath());
-//            appUser.setIsActive(0);
-//            appUser.setCreatedBy(userObj);
-//            appUser.setCreatedDate(LocalDateTime.now());
-//            userRepo.save(appUser);
-//            DefaultResponse response = new DefaultResponse();
-//            response.setMsg("User created successfully.Approval pending");
-//            return ResponseUtils.createSuccessResponse(response, new TypeReference<DefaultResponse>() {});
-//        } catch (SDDException e) {
-//            throw e;
-//        } catch (Exception e) {
-//            logger.error("Error while creating user", e);
-//            throw new SDDException(false, "Unexpected error during user creation.");
-//        }
-//    }
-//
-//
-//
-//    @Transactional(rollbackFor = Exception.class)
-//    @Override
-//    public ApiResponse<DefaultResponse> updateUser(Long userId, UpdateUserRequest request) {
-//
-//        try {
-//            AppUser userObj =
-//                    validationUtilClass.getUserDetails(userId);
-//
-//            // Allow only Super Admin
-//            if (userObj.getRole() == null ||
-//                    userObj.getRole().getDescription() == null ||
-//                    !userObj.getRole()
-//                            .getDescription()
-//                            .equalsIgnoreCase("Super-Admin")) {
-//
-//                throw new SDDException(false, ErrorCode.AU1013);
-//            }
-//
-//            // Fetch existing user
-//            AppUser appUser =
-//                    userRepo.findById(request.getUserId())
-//                            .orElseThrow(() ->
-//                                    new SDDException(false, ErrorCode.AU1014));
-//
-//            // Mobile unique check
-//            if (request.getMobile() != null &&
-//                    userRepo.findByMobile(request.getMobile())
-//                            .filter(user ->
-//                                    !user.getUserId()
-//                                            .equals(request.getUserId()))
-//                            .isPresent()) {
-//
-//                throw new SDDException(false, ErrorCode.AU1017);
-//            }
-//
-//            // Email unique check
-//            if (request.getEmail() != null &&
-//                    userRepo.findByEmailIgnoreCase(request.getEmail())
-//                            .filter(user ->
-//                                    !user.getUserId()
-//                                            .equals(request.getUserId()))
-//                            .isPresent()) {
-//
-//                throw new SDDException(false, ErrorCode.AU1018);
-//            }
-//
-//            if (request.getRoleId() != null) {
-//
-//                RoleMaster roleObj =
-//                        roleMasterRepository
-//                                .findById(request.getRoleId())
-//                                .orElseThrow(() ->
-//                                        new SDDException(false, ErrorCode.AU1015));
-//
-//                appUser.setRole(roleObj);
-//            }
-//
-//            Optional.ofNullable(request.getFirstName())
-//                    .ifPresent(appUser::setFirstName);
-//
-//            Optional.ofNullable(request.getLastName())
-//                    .ifPresent(appUser::setLastName);
-//
-//            Optional.ofNullable(request.getEmail())
-//                    .ifPresent(appUser::setEmail);
-//
-//            Optional.ofNullable(request.getMobile())
-//                    .ifPresent(appUser::setMobile);
-//
-//            Optional.ofNullable(request.getRemarks())
-//                    .ifPresent(appUser::setRemarks);
-//
-//            Optional.ofNullable(request.getDocPath())
-//                    .ifPresent(appUser::setDocPath);
-//
-//
-//            appUser.setUpdatedBy(userObj);
-//            appUser.setUpdatedDate(LocalDateTime.now());
-//
-//            userRepo.save(appUser);
-//
-//            DefaultResponse response =
-//                    new DefaultResponse();
-//
-//            response.setMsg("User updated successfully");
-//
-//            return ResponseUtils.createSuccessResponse(
-//                    response,
-//                    new TypeReference<DefaultResponse>() {}
-//            );
-//
-//        }
-//
-//        catch (SDDException e) {
-//            throw e;
-//        }
-//
-//        catch (Exception e) {
-//
-//            logger.error("Error while updating user", e);
-//
-//            throw new SDDException(
-//                    false,
-//                    "Unexpected error during user update."
-//            );
-//        }
-//    }
-//
-//
-//
-//    @Transactional(rollbackFor = Exception.class)
-//    @Override
-//    public ApiResponse<DefaultResponse> updateUserStatus(Long userId,UserStatusRequest request) {
-//        ValidationUtil.validateUpdateUserStatusRequest(request);
-//        try {
-//            AppUser userObj= validationUtilClass.getUserDetails(userId);
-//            if(userObj.getRole() == null || userObj.getRole().getDescription() == null || !userObj.getRole().getDescription().equalsIgnoreCase("Super-Admin")){
-//                throw new SDDException(false, ErrorCode.AU1013);
-//            }
-//
-//            // Fetch existing user (by userId or loginId)
-//            AppUser appUser;
-//            if (request.getUserId() != null) {
-//                appUser = userRepo.findById(request.getUserId())
-//                        .orElseThrow(() -> new SDDException(false, ErrorCode.AU1011));
-//            } else if (request.getLoginId() != null && !request.getLoginId().isEmpty()) {
-//                appUser = userRepo.findByLoginIdIgnoreCase(request.getLoginId())
-//                        .orElseThrow(() -> new SDDException(false, ErrorCode.AU1011));
-//            } else {
-//                throw new SDDException(false, ErrorCode.AU1012);
-//            }
-//            String action ="";
-//            if (request.getFlag() == 0) {
-//                action ="Deactivation";
-//                appUser.setIsActive(0);
-//            } else if (request.getFlag() == 1) {
-//                action ="Activation";
-//                appUser.setIsActive(0);
-//            } else {
-//                throw new SDDException(false, ErrorCode.AU1020);
-//            }
-//            appUser.setApprovedFlag(0);
-//            appUser.setDocPath(request.getDocPath());
-//            appUser.setUpdatedBy(userObj);
-//            appUser.setUpdatedDate(LocalDateTime.now());
-//            userRepo.save(appUser);
-//
-//            DefaultResponse response = new DefaultResponse();
-//            response.setMsg("User " + action + " request submitted. Approval pending.");
-//            return ResponseUtils.createSuccessResponse(
-//                    response,
-//                    new TypeReference<DefaultResponse>() {}
-//            );
-//        } catch (SDDException e) {
-//            throw e;
-//        } catch (Exception e) {
-//            logger.error("Error while updating user status", e);
-//            throw new SDDException(false, "Unexpected error during user status update.");
-//        }
-//    }
-//
-//
-//
-//
-//    @Transactional(rollbackFor = Exception.class)
-//    @Override
-//    public ApiResponse<DefaultResponse> assignUserRole(Long userId,AssignUserRoleRequest request) {
-//
-//        ValidationUtil.validateAssignUserRoleRequest(request);
-//
-//        try {
-//            AppUser userObj= validationUtilClass.getUserDetails(userId);
-//            if(userObj.getRole() == null || userObj.getRole().getDescription() == null || !userObj.getRole().getDescription().equalsIgnoreCase("Super-Admin")){
-//                throw new SDDException(false, ErrorCode.AU1013);
-//            }
-//            // Fetch existing user (by userId or loginId)
-//            AppUser appUser;
-//
-//            if (request.getUserId() != null) {
-//                appUser = userRepo.findById(request.getUserId())
-//                        .orElseThrow(() -> new SDDException(false, ErrorCode.AU1011));
-//            } else if (request.getLoginId() != null && !request.getLoginId().isEmpty()) {
-//                appUser = userRepo.findByLoginIdIgnoreCase(request.getLoginId())
-//                        .orElseThrow(() -> new SDDException(false, ErrorCode.AU1011));
-//            } else {
-//                throw new SDDException(false, ErrorCode.AU1012);
-//            }
-//
-//            // Fetch & Assign Role
-//            if (request.getRoleId() != null) {
-//                RoleMaster roleObj = roleMasterRepository.findById(request.getRoleId())
-//                        .orElseThrow(() -> new SDDException(false, ErrorCode.AU1015));
-//                appUser.setRole(roleObj);
-//            }
-//
-//            // Status & Approval Flow
-//            appUser.setIsActive(0);
-//            appUser.setApprovedFlag(0);
-//            appUser.setDocPath(request.getDocPath());
-//            appUser.setUpdatedBy(userObj);
-//            appUser.setUpdatedDate(LocalDateTime.now());
-//            userRepo.save(appUser);
-//
-//            DefaultResponse response = new DefaultResponse();
-//            response.setMsg("Role assigned successfully. Approval pending.");
-//            return ResponseUtils.createSuccessResponse(
-//                    response,
-//                    new TypeReference<DefaultResponse>() {}
-//            );
-//
-//        } catch (SDDException e) {
-//            throw e;
-//        } catch (Exception e) {
-//            logger.error("Error while assigning role to user", e);
-//            throw new SDDException(false, "Unexpected error during role assignment.");
-//        }
-//    }
-//
-//
-//
-//
-//    @Transactional(rollbackFor = Exception.class)
-//    @Override
-//    public ApiResponse<DefaultResponse> updateUsersRole(Long userId,UpdateUserRoleRequest request) {
-//        ValidationUtil.validateUpdateUsersRoleRequest(request);
-//        try {
-//            AppUser userObj= validationUtilClass.getUserDetails(userId);
-//            if(userObj.getRole() == null || userObj.getRole().getDescription() == null || !userObj.getRole().getDescription().equalsIgnoreCase("Super-Admin")){
-//                throw new SDDException(false, ErrorCode.AU1013);
-//            }
-//
-//            // Fetch existing user (by userId or loginId)
-//            AppUser appUser;
-//            if (request.getUserId() != null) {
-//                appUser = userRepo.findById(request.getUserId())
-//                        .orElseThrow(() -> new SDDException(false, ErrorCode.AU1011));
-//            } else if (request.getLoginId() != null && !request.getLoginId().isEmpty()) {
-//                appUser = userRepo.findByLoginIdIgnoreCase(request.getLoginId())
-//                        .orElseThrow(() -> new SDDException(false, ErrorCode.AU1011));
-//            } else {
-//                throw new SDDException(false, ErrorCode.AU1012);
-//            }
-//            // Validate previous role
-//            if (appUser.getRole() == null ||
-//                    !appUser.getRole().getRoleId().equals(request.getPreviousRoleId())) {
-//                throw new SDDException(false, ErrorCode.AU1019);
-//            }
-//            String oldRole=appUser.getRole().getDescription();
-//            // Fetch & Assign new role
-//            RoleMaster newRoleObj = roleMasterRepository.findById(request.getNewRoleId())
-//                    .orElseThrow(() -> new SDDException(false, ErrorCode.AU1025));
-//
-//            if (oldRole.equalsIgnoreCase(newRoleObj.getDescription())) {
-//                throw new SDDException(false,  "Old Role and New Role Both are Same");
-//            }
-//
-//            appUser.setRole(newRoleObj);
-//            //Approval & audit flow
-//            appUser.setIsActive(0);          // InActive
-//            appUser.setApprovedFlag(0);   // Pending
-//            appUser.setDocPath(request.getDocPath());
-//            appUser.setUpdatedBy(userObj);
-//            appUser.setUpdatedDate(LocalDateTime.now());
-//            userRepo.save(appUser);
-//            DefaultResponse response = new DefaultResponse();
-//            response.setMsg("User role updated from "
-//                    + oldRole
-//                    + " to "
-//                    + newRoleObj.getDescription()
-//                    + ". Approval pending."
-//            );
-//            return ResponseUtils.createSuccessResponse(
-//                    response,
-//                    new TypeReference<DefaultResponse>() {}
-//            );
-//        } catch (SDDException e) {
-//            throw e;
-//        } catch (Exception e) {
-//            logger.error("Error while updating user role", e);
-//            throw new SDDException(false, "Unexpected error during user role update.");
-//        }
-//    }
-//
-//
-//
-//
-//    @Override
-//    @Transactional(rollbackFor = Exception.class)
-//    public ApiResponse<DefaultResponse> approveUser(Long userId, ApproveRequest request) {
-//        logger.info("Approving user. userId: {}, status: {}",
-//                request.getUserId(), request.getFlag());
-//        AppUser userObj= validationUtilClass.getUserDetails(userId);
-//        if(userObj.getRole() == null || userObj.getRole().getDescription() == null || !userObj.getRole().getDescription().equalsIgnoreCase("Super-Admin")){
-//            throw new SDDException(false, ErrorCode.AU1013);
-//        }
-//
-//        try {
-//            if (request.getUserId() == null) {
-//                throw new SDDException(false, ErrorCode.AU1012);
-//            }
-//            AppUser user = userRepo.findByUserIdAndIsActiveAndApprovedFlag(request.getUserId(),0,0)
-//                    .orElseThrow(() -> new SDDException(false, ErrorCode.AU1010));
-//
-//            String action="";
-//            if (request.getFlag() == 1) {
-//                action="Approved";
-//                user.setIsActive(1);
-//                user.setApprovedFlag(1);
-//                user.setRemarks("Approved: "+request.getRemarks());
-//            } else if (request.getFlag() == 2) {
-//                action="Rejected";
-//                user.setIsActive(0);
-//                user.setApprovedFlag(2);
-//                user.setRemarks("Rejected: "+request.getRemarks());
-//            } else {
-//                throw new SDDException(false, ErrorCode.AU1021);
-//            }
-//            user.setApprovedBy(userObj);
-//            user.setApprovedDate(LocalDateTime.now());
-//            userRepo.save(user);
-//
-//            DefaultResponse response = new DefaultResponse();
-//            response.setMsg("User " + action + " successfully.");
-//            return ResponseUtils.createSuccessResponse(
-//                    response,
-//                    new TypeReference<DefaultResponse>() {}
-//            );
-//        } catch (SDDException e) {
-//            throw e;
-//        } catch (Exception e) {
-//            logger.error("Error while approving user", e);
-//            throw new SDDException(false, "Unexpected error while approving user");
-//        }
-//    }
-//
-//
-//
-//    @Override
-//    public ApiResponseWithPageable<List<UserResponse>> getAllApprovalPendingUsers(Long userId, UserRequest request) {
-//        logger.info("Fetching APPROVAL PENDING users. Page: {}, Limit: {}",
-//                request.getPage(), request.getLimit());
-//        try {
-//
-//            Pageable pageable = helperUtill.getPageable(
-//                    request.getPage(),
-//                    request.getLimit()
-//            );
-//            Page<AppUser> usersPage = userRepo.findByIsActiveAndApprovedFlag(0,0, pageable);
-//            List<UserResponse> responseList = usersPage.getContent()
-//                    .stream()
-//                    .map(helperUtill::mapToUserResponse)
-//                    .collect(Collectors.toList());
-//            return ResponseUtils.createPageableSuccessResponse(
-//                    responseList,
-//                    usersPage.getTotalElements(),
-//                    usersPage.getTotalPages(),
-//                    pageable.getPageNumber() + 1,
-//                    pageable.getPageSize()
-//            );
-//        } catch (SDDException e) {
-//            throw e;
-//        } catch (Exception e) {
-//            logger.error("Error while fetching approval pending users", e);
-//            throw new SDDException(false, "Unexpected error while fetching approval pending users");
-//        }
-//    }
-//
-//
-//
-//    @Override
-//    public ApiResponseWithPageable<List<UserResponse>> getAllApprovalRejectedUsers(Long userId,UserRequest request) {
-//        logger.info("Fetching APPROVAL REJECTED users. Page: {}, Limit: {}",
-//                request.getPage(), request.getLimit());
-//        try {
-//            AppUser userObj= validationUtilClass.getUserDetails(userId);
-//            Pageable pageable = helperUtill.getPageable(
-//                    request.getPage(),
-//                    request.getLimit()
-//            );
-//            Page<AppUser> usersPage = userRepo.findByIsActiveAndApprovedFlag(0,2, pageable);
-//            List<UserResponse> responseList = usersPage.getContent()
-//                    .stream()
-//                    .map(helperUtill::mapToUserResponse)
-//                    .collect(Collectors.toList());
-//            return ResponseUtils.createPageableSuccessResponse(
-//                    responseList,
-//                    usersPage.getTotalElements(),
-//                    usersPage.getTotalPages(),
-//                    pageable.getPageNumber() + 1,
-//                    pageable.getPageSize()
-//            );
-//        } catch (SDDException e) {
-//            throw e;
-//        } catch (Exception e) {
-//            logger.error("Error while fetching approval rejected users", e);
-//            throw new SDDException(false, "Unexpected error while fetching approval rejected users");
-//        }
-//    }
-//
-//
-//
-//
-//    @Override
-//    public ApiResponseWithPageable<List<UserResponse>> getAllApprovalApprovedUsers(Long userId,UserRequest request) {
-//        logger.info("Fetching APPROVAL APPROVED users. Page: {}, Limit: {}",
-//                request.getPage(), request.getLimit());
-//        try {
-//            AppUser userObj= validationUtilClass.getUserDetails(userId);
-//            Pageable pageable = helperUtill.getPageable(
-//                    request.getPage(),
-//                    request.getLimit()
-//            );
-//            Page<AppUser> usersPage = userRepo.findByIsActiveAndApprovedFlag(1,1, pageable);
-//            List<UserResponse> responseList = usersPage.getContent()
-//                    .stream()
-//                    .map(helperUtill::mapToUserResponse)
-//                    .collect(Collectors.toList());
-//            return ResponseUtils.createPageableSuccessResponse(
-//                    responseList,
-//                    usersPage.getTotalElements(),
-//                    usersPage.getTotalPages(),
-//                    pageable.getPageNumber() + 1,
-//                    pageable.getPageSize()
-//            );
-//        } catch (SDDException e) {
-//            throw e;
-//        } catch (Exception e) {
-//            logger.error("Error while fetching approval approved users", e);
-//            throw new SDDException(false, "Unexpected error while fetching approval approved users");
-//        }
-//    }
-//
-//
-//
-//    @Override
-//    public ApiResponseWithPageable<List<UserResponse>> getAllUsers(
-//            Long userId,
-//            UserRequest request) {
-//
-//        logger.info("Fetching users. Page: {}, Limit: {}",
-//                request.getPage(),
-//                request.getLimit());
-//
-//        try {
-//
-//            // Validate logged-in user
-//            AppUser userObj =
-//                    validationUtilClass.getUserDetails(userId);
-//
-//            // Pageable
-//            Pageable pageable =
-//                    helperUtill.getPageable(
-//                            request.getPage(),
-//                            request.getLimit()
-//                    );
-//
-//            Page<AppUser> usersPage;
-//
-//        /*
-//         ===============================
-//         FILTER LOGIC
-//         ===============================
-//         */
-//
-//            if (request.getUserId() != null) {
-//
-//                // Search by UserId
-//                usersPage =
-//                        userRepo.findByUserId(
-//                                request.getUserId(),
-//                                pageable
-//                        );
-//
-//            }
-//
-//            else if (request.getLoginId() != null &&
-//                    !request.getLoginId().isEmpty()) {
-//
-//                // Search by LoginId
-//                usersPage =
-//                        userRepo.findByLoginIdIgnoreCase(
-//                                request.getLoginId(),
-//                                pageable
-//                        );
-//
-//            }
-//
-//            else {
-//
-//                // Fetch all users
-//                usersPage =
-//                        userRepo.findAll(pageable);
-//            }
-//
-//        /*
-//         ===============================
-//         ENTITY → DTO
-//         ===============================
-//         */
-//
-//            List<UserResponse> responseList =
-//                    usersPage.getContent()
-//                            .stream()
-//                            .map(helperUtill::mapToUserResponse)
-//                            .collect(Collectors.toList());
-//
-//        /*
-//         ===============================
-//         RESPONSE
-//         ===============================
-//         */
-//
-//            return ResponseUtils.createPageableSuccessResponse(
-//                    responseList,
-//                    usersPage.getTotalElements(),
-//                    usersPage.getTotalPages(),
-//                    pageable.getPageNumber() + 1,
-//                    pageable.getPageSize()
-//            );
-//
-//        }
-//
-//        catch (SDDException e) {
-//            throw e;
-//        }
-//
-//        catch (Exception e) {
-//
-//            logger.error("Error while fetching users", e);
-//
-//            throw new SDDException(
-//                    false,
-//                    "Unexpected error while fetching users"
-//            );
-//        }
-//    }
-//
-//
-//    @Override
-//    public ApiResponseWithPageable<List<UserResponse>> getAllInActiveUsers(Long userId,UserRequest request) {
-//        logger.info("Fetching INACTIVE users. Page: {}, Limit: {}",
-//                request.getPage(), request.getLimit());
-//        try {
-//            AppUser userObj= validationUtilClass.getUserDetails(userId);
-//            Pageable pageable = helperUtill.getPageable(
-//                    request.getPage(),
-//                    request.getLimit()
-//            );
-//            Page<AppUser> usersPage = userRepo.findByHospital_HospitalIdAndIsActive(userObj.getHospital().getHospitalId(),0, pageable);
-//            List<UserResponse> responseList = usersPage.getContent()
-//                    .stream()
-//                    .map(helperUtill::mapToUserResponse)
-//                    .collect(Collectors.toList());
-//            return ResponseUtils.createPageableSuccessResponse(
-//                    responseList,
-//                    usersPage.getTotalElements(),
-//                    usersPage.getTotalPages(),
-//                    pageable.getPageNumber() + 1,
-//                    pageable.getPageSize()
-//            );
-//        } catch (SDDException e) {
-//            throw e;
-//        } catch (Exception e) {
-//            logger.error("Error while fetching inactive users", e);
-//            throw new SDDException(false, "Unexpected error while fetching inactive users");
-//        }
-//    }
-//
-//
-//
-//    @Override
-//    public ApiResponseWithPageable<List<UserResponse>> getUsersByOrg(Long userId,GetUserOrgRequest request) {
-//
-//        logger.info("Fetching all users by organization type and organization id. Page: {}, Limit: {}",
-//                request.getPage(), request.getLimit());
-//        try {
-//            // Pageable
-//            Pageable pageable = helperUtill.getPageable(
-//                    request.getPage(),
-//                    request.getLimit()
-//            );
-//
-//            Page<AppUser> usersPage;
-//
-//            if(request.getOrgType().equalsIgnoreCase("HOSPITAL")){
-//                usersPage = userRepo.findByHospital_HospitalId(request.getOrgId(),pageable);
-//            } else if (request.getOrgType().equalsIgnoreCase("TPA")) {
-//                usersPage = userRepo.findByTpa_TpaId(request.getOrgId(),pageable);
-//            } else if (request.getOrgType().equalsIgnoreCase("INSURANCE")) {
-//                usersPage = userRepo.findByInsurance_InsuranceId(request.getOrgId(),pageable);
-//            } else if (request.getOrgType().equalsIgnoreCase("DISTRICT")) {
-//                usersPage = userRepo.findByDistrict_DistrictCode(request.getOrgId(),pageable);
-//            } else if (request.getOrgType().equalsIgnoreCase("RSHAA")) {
-//                usersPage = userRepo.findByGovOrg_govOrgId(request.getOrgId(),pageable);
-//            }else {
-//                throw new SDDException(false, "User must belong to exactly one organization");
-//            }
-//
-//            // Entity → DTO
-//            List<UserResponse> responseList = usersPage.getContent().stream().map(helperUtill::mapToUserResponse).collect(Collectors.toList());
-//            return ResponseUtils.createPageableSuccessResponse(
-//                    responseList,
-//                    usersPage.getTotalElements(),
-//                    usersPage.getTotalPages(),
-//                    pageable.getPageNumber() + 1,   // page starts from 1
-//                    pageable.getPageSize()
-//            );
-//        } catch (SDDException e) {
-//            throw e;
-//        } catch (Exception e) {
-//            logger.error("Error while fetching all users by Organization type and Id", e);
-//            throw new SDDException(false, "Unexpected error while fetching users Organization type and Id");
-//        }
-//    }
-//
-//
-//    @Override
-//    public ApiResponse<?> getOrgTypes(AllOrgRequest request) {
-//        try {
-//            if (request == null || request.getOrgType()==null) {
-//                throw new SDDException(false, "User Must Belong To Any One Organization");
-//            }
-//            // Initialize a generic list
-//            List<?> data;
-//
-//            if (request.getOrgType().equalsIgnoreCase("Hospital")) {
-//                data = hospitalMasterRepository.findAllByIsActive(1L);
-//
-//            } else if (request.getOrgType().equalsIgnoreCase("TPA")) {
-//                data = tpaRepository.findAllByIsActive(1L);
-//
-//            } else if (request.getOrgType().equalsIgnoreCase("District")) {
-//                data = districtMasterRepository.findByState_StateCodeAndIsActive(8, 1);
-//
-//            } else if (request.getOrgType().equalsIgnoreCase("RSHAA")) {
-//                data = govOrgRepository.findAllByIsActive(1L);
-//
-//            } else if (request.getOrgType().equalsIgnoreCase("INSURANCE")) {
-//                data = insuranceRepository.findAllByIsActive(1L);
-//
-//            } else {
-//                throw new SDDException(false, "Invalid Organization Type");
-//            }
-//            return ResponseUtils.createSuccessResponse(data, new TypeReference<List<?>>() {});
-//
-//        } catch (SDDException ex) {
-//            throw ex;
-//        } catch (Exception ex) {
-//            log.error("Error while fetching Organization List for type: ", ex);
-//            throw new SDDException(false, "Error while fetching Organization List", ex);
-//        }
-//    }
-//
-//
-//
-//    @Override
-//    public ApiResponse<UserResponse> getUsersById(UserRequest request) {
-//        logger.info("Fetching user details. userId: {}, loginId: {}", request.getUserId(), request.getLoginId());
-//        try {
-//            AppUser appUser;
-//            if (request.getUserId() != null) {
-//                appUser = userRepo.findById(request.getUserId())
-//                        .orElseThrow(() -> new SDDException(false, ErrorCode.AU1011));
-//            } else if (request.getLoginId() != null && !request.getLoginId().isEmpty()) {
-//                appUser = userRepo.findByLoginIdIgnoreCase(request.getLoginId())
-//                        .orElseThrow(() -> new SDDException(false, ErrorCode.AU1011));
-//            } else {
-//                throw new SDDException(false, ErrorCode.AU1012);
-//            }
-//            UserResponse response = helperUtill.mapToUserResponse(appUser);
-//            return ResponseUtils.createSuccessResponse(
-//                    response,
-//                    new TypeReference<UserResponse>() {}
-//            );
-//        } catch (SDDException e) {
-//            throw e;
-//        } catch (Exception e) {
-//            logger.error("Error while fetching user details", e);
-//            throw new SDDException(false, "Unexpected error while fetching user");
-//        }
-//    }
+    @Transactional(rollbackFor = {Exception.class})
+    @Override
+    public ApiResponse<AuthResponse> getLogin(AuthRequest req,
+                                              HttpServletResponse response,
+                                              HttpServletRequest request) {
+
+        ValidationUtil.validateLoginRequest(req);
+
+        String ip = helperUtill.getClientIP(request);
+        String loginId;
+        String moduleType = normalizeModuleType(req.getModuleType());
+
+        if (!ALLOWED_MODULE_TYPES.contains(moduleType)) {
+            throw new SDDException(false, "Invalid module type. Allowed values are TMS, SR, HEM, CITIZEN, CRC");
+        }
+
+        boolean bypassDbValidation = DB_VALIDATION_BYPASS_MODULE_TYPES.contains(moduleType);
+        boolean isHemModule = "HEM".equals(moduleType);
+        boolean isCitizenModule = "CITIZEN".equals(moduleType);
+        boolean isGuestFallbackModule = isHemModule || isCitizenModule;
+
+        try {
+
+            boolean isSSOLogin = StringUtils.hasText(req.getToken())
+                    && !isGuestFallbackModule
+                    && (bypassDbValidation || !StringUtils.hasText(req.getUsername()));
+
+            AppUser appUser = null;
+            RoleMaster fallbackCitizenRole = null;
+
+            // ================= SSO LOGIN (Citizen + DB user) =================
+            if (isSSOLogin) {
+
+                loginId = helperUtill.extractLoginIdFromToken(req.getToken());
+                //loginId = req.getUsername();
+
+                if (!jwtUtil.validateToken1(req.getToken(), loginId)) {
+                    throw new SDDException(false, ErrorCode.AU1000);
+                }
+
+                if (!bypassDbValidation) {
+                    appUser = userRepo
+                            .findByLoginIdIgnoreCaseAndIsActiveAndRoleIsNotNull(loginId, 1);
+
+                    if (appUser == null) {
+                        throw new SDDException(false, ErrorCode.AU1000);
+                    }
+                }
+
+                UsernamePasswordAuthenticationToken auth =
+                        new UsernamePasswordAuthenticationToken(loginId, null, List.of());
+
+                SecurityContextHolder.getContext().setAuthentication(auth);
+            }
+
+            // ================= NORMAL LOGIN (ONLY DB USER) =================
+            else {
+
+                loginId = req.getUsername();
+                String password = req.getPassword();
+
+                if (!StringUtils.hasText(loginId)) {
+                    throw new SDDException(false, ErrorCode.AU1000);
+                }
+
+                appUser = userRepo
+                        .findByLoginIdIgnoreCaseAndIsActiveAndRoleIsNotNull(loginId, 1);
+
+                if (appUser == null) {
+                    if (isGuestFallbackModule && userRepo.findByLoginIdIgnoreCase(loginId).isEmpty()) {
+                        fallbackCitizenRole = resolveRajasthanCitizenRole();
+
+                        UsernamePasswordAuthenticationToken auth =
+                                new UsernamePasswordAuthenticationToken(loginId, null, List.of());
+                        SecurityContextHolder.getContext().setAuthentication(auth);
+                    } else {
+                        throw new SDDException(false, ErrorCode.AU1000);
+                    }
+                } else {
+                    Authentication auth = authenticationManager.authenticate(
+                            new UsernamePasswordAuthenticationToken(loginId, password));
+                    SecurityContextHolder.getContext().setAuthentication(auth);
+                }
+
+            }
+            // ================= TOKEN GENERATION =================
+
+            AuthResponse resp = new AuthResponse();
+
+            UserDetails userDetails = new User(loginId, "", List.of());
+
+            String accessToken;
+            if (fallbackCitizenRole != null) {
+                accessToken = jwtUtil.generateAccessTokenForGuestRole(userDetails, fallbackCitizenRole);
+            } else {
+                accessToken = jwtUtil.generateAccessToken1(userDetails, appUser);
+            }
+
+            String refreshToken = refreshTokenService.createRefreshToken1(appUser != null ? appUser.getUserId() : null, loginId, req.getDeviceInfo(), ip);
+
+            resp.setAccessToken(accessToken);
+            resp.setRefreshToken(refreshToken);
+
+            return ResponseUtils.createSuccessResponse(
+                    resp, new TypeReference<AuthResponse>() {}
+            );
+
+        } catch (BadCredentialsException ex) {
+            throw new SDDException(false, ErrorCode.AU1000);
+        } catch (SDDException e) {
+            throw e;
+        } catch (Exception ex) {
+            log.error("Error during login ", ex);
+            throw new SDDException(false, "Authentication failed");
+        }
+    }
+
+    private String normalizeModuleType(String moduleType) {
+        if (!StringUtils.hasText(moduleType)) {
+            throw new SDDException(false, "Module Type Can Not be Null eg. TMS/SR/HEM/CITIZEN/CRC");
+        }
+        return moduleType.trim().toUpperCase();
+    }
+
+    private RoleMaster resolveRajasthanCitizenRole() {
+        List<String> roleCandidates = List.of(
+                "Rajasthan-Citizen",
+                "Rajasthan Citizen",
+                "Citizen Of Rajasthan"
+        );
+
+        for (String roleName : roleCandidates) {
+            Optional<RoleMaster> roleOpt = roleMasterRepository.findByDescriptionIgnoreCase(roleName);
+            if (roleOpt.isPresent()) {
+                return roleOpt.get();
+            }
+        }
+
+        return roleMasterRepository.findAllByIsActive(1L)
+                .stream()
+                .filter(Objects::nonNull)
+                .filter(role -> StringUtils.hasText(role.getDescription()))
+                .filter(role -> {
+                    String roleDesc = role.getDescription().toLowerCase(Locale.ROOT);
+                    return roleDesc.contains("rajasthan") && roleDesc.contains("citizen");
+                })
+                .findFirst()
+                .orElseThrow(() -> new SDDException(false, "Rajasthan Citizen role not found in MST_ROLE"));
+    }
+
+
+    @Transactional(rollbackFor = {Exception.class})
+    @Override
+    public ApiResponse<AuthResponse> getRefresh(TokenRefreshRequest request, HttpServletRequest req) {
+
+        ValidationUtil.validateRefreshTokenRequest(request);
+
+        try {
+
+            String ip = helperUtill.getClientIP(req);
+
+            Optional<VerifyTokenResponse> opt =
+                    refreshTokenService.verifyAndRotate(request.getRefreshToken());
+
+            if (opt.isEmpty()) {
+                throw new SDDException(false, ErrorCode.AU1001); // invalid refresh token
+            }
+
+            VerifyTokenResponse tokenData = opt.get();
+
+            AuthResponse resp = new AuthResponse();
+
+            AppUser appUser = tokenData.getUser();
+            String loginId;
+
+            if (appUser != null) {
+                loginId = appUser.getLoginId();
+            } else {
+                loginId = tokenData.getSsoId();
+            }
+
+            // Common UserDetails (works for both)
+            UserDetails userDetails =
+                    new org.springframework.security.core.userdetails.User(
+                            loginId,
+                            "",
+                            List.of()
+                    );
+
+            // COMMON ACCESS TOKEN
+            String newAccessToken = jwtUtil.generateAccessToken1(userDetails, appUser);
+            // COMMON REFRESH TOKEN
+            String newRefreshToken = refreshTokenService.createRefreshToken1(appUser != null ? appUser.getUserId() : null, loginId, request.getDeviceInfo(), ip);
+
+            resp.setAccessToken(newAccessToken);
+            resp.setRefreshToken(newRefreshToken);
+
+            return ResponseUtils.createSuccessResponse(
+                    resp, new TypeReference<AuthResponse>() {}
+            );
+
+        }
+        catch (SDDException e) {
+            throw e;
+        }
+        catch (Exception ex) {
+            log.error("Error while refreshing token", ex);
+            throw new SDDException(false, "Token refresh failed");
+        }
+    }
+
+
+
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public ApiResponse<Boolean> getValidateToken(String authHeader) {
+        try {
+            // Check header
+            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                throw new SDDException(false, ErrorCode.AU1002); // Invalid token format
+            }
+            // Extract token
+            String token = authHeader.substring(7);
+            String username;
+            // Extract username from token
+            try {
+                username = jwtUtil.getUsernameFromToken(token);
+            } catch (ExpiredJwtException e) {
+                throw new SDDException(false, "JWT token expired");
+            } catch (JwtException e) {
+                throw new SDDException(false, "Invalid JWT token");
+            }
+            // Username must exist
+            if (username == null) {
+                throw new SDDException(false, "Username not found in token");
+            }
+            // Load user
+            UserDetails userDetails =
+                    userDetailsService.loadUserByUsername(username);
+            // Validate token
+            boolean isValid = jwtUtil.validateToken(token, userDetails);
+            if (!isValid) {
+                throw new SDDException(false, "JWT token validation failed");
+            }
+            // Success
+            return new ApiResponse<>(true, true, "Token is valid");
+        } catch (SDDException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("Error while validating token", e);
+            throw new SDDException(false, "Error while validating token");
+        }
+    }
+
+
+
+
+    @Transactional(rollbackFor = {Exception.class})
+    @Override
+    public ApiResponse<String> getLogout(TokenRefreshRequest request) {
+
+        ValidationUtil.validateRefreshTokenRequest(request);
+
+        try {
+            boolean flag = refreshTokenService.revoke(request.getRefreshToken());
+            if (!flag) {
+                throw new SDDException(false, ErrorCode.AU1004);
+            }
+            String msg = "User Logout Successfully from Current Device";
+            log.info("Fetched {} User Current Device from login", request.getDeviceInfo());
+            return ResponseUtils.createSuccessResponse(msg, new TypeReference<String>(){});
+        }
+        catch (SDDException e) {
+            throw e;
+        }
+        catch (Exception ex) {
+            log.error("Logout from Current device error", ex);
+            throw new SDDException(false, "Unexpected error during logout from Current device");
+        }
+    }
+
+    @Transactional(rollbackFor = {Exception.class})
+    @Override
+    public ApiResponse<String> getLogoutAllDevice(TokenRefreshRequest request) {
+        ValidationUtil.validateRefreshTokenRequest(request);
+        try {
+            boolean flag = refreshTokenService.revokeAllForUser(request.getRefreshToken());
+            if (!flag) {
+                throw new SDDException(false, ErrorCode.AU1004);
+            }
+            String msg = "User Logout Successfully from All Device";
+            log.info("Fetched {} User Device from login", request.getDeviceInfo());
+            return ResponseUtils.createSuccessResponse(msg, new TypeReference<String>(){});
+        }
+        catch (SDDException e) {
+            throw e;
+        }
+        catch (Exception ex) {
+            log.error("Logout from All Device error", ex);
+            throw new SDDException(false, "Unexpected error during logout from All Device");
+        }
+    }
+
 
 
 }

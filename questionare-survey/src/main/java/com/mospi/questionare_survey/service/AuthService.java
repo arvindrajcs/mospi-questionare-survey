@@ -1,42 +1,26 @@
 package com.mospi.questionare_survey.service;
 
 
+import com.mospi.questionare_survey.request.AuthRequest;
+import com.mospi.questionare_survey.request.TokenRefreshRequest;
+import com.mospi.questionare_survey.response.ApiResponse;
+import com.mospi.questionare_survey.response.AuthResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
 import java.util.List;
 
 public interface AuthService {
 
-//    ApiResponse<DefaultResponse> createUser(Long userId,CreateUserRequest request);
-//
-//    ApiResponse<DefaultResponse> updateUser(Long userId,UpdateUserRequest request);
-//
-//    ApiResponse<DefaultResponse> updateUserStatus(Long userId,UserStatusRequest request);
-//
-//    ApiResponse<DefaultResponse> assignUserRole(Long userId,AssignUserRoleRequest userRequest);
-//
-//    ApiResponse<DefaultResponse> updateUsersRole(Long userId,UpdateUserRoleRequest request);
-//
-//    ApiResponse<DefaultResponse> approveUser(Long userId, ApproveRequest request);
-//
-//
-//
-//    ApiResponseWithPageable<List<UserResponse>> getAllApprovalPendingUsers(Long userId, UserRequest request);
-//
-//    ApiResponseWithPageable<List<UserResponse>> getAllApprovalRejectedUsers(Long userId,UserRequest request);
-//
-//    ApiResponseWithPageable<List<UserResponse>> getAllApprovalApprovedUsers(Long userId, UserRequest request);
-//
-//    ApiResponseWithPageable<List<UserResponse>> getAllUsers(Long userId,UserRequest request);
-//
-//    ApiResponseWithPageable<List<UserResponse>> getAllInActiveUsers(Long userId,UserRequest request);
-//
-//
-//
-//
-//    ApiResponseWithPageable<List<UserResponse>> getUsersByOrg(Long userId,GetUserOrgRequest request);
-//
-//    ApiResponse<?> getOrgTypes(AllOrgRequest request);
-//
-//    ApiResponse<UserResponse> getUsersById(UserRequest request);
+    ApiResponse<AuthResponse> getLogin(AuthRequest req, HttpServletResponse response, HttpServletRequest request);
+
+    ApiResponse<AuthResponse> getRefresh(TokenRefreshRequest request, HttpServletRequest req);
+
+    ApiResponse<Boolean> getValidateToken(String authHeader);
+
+    ApiResponse<String> getLogout(TokenRefreshRequest request);
+
+    ApiResponse<String> getLogoutAllDevice(TokenRefreshRequest request);
 
 
 }
