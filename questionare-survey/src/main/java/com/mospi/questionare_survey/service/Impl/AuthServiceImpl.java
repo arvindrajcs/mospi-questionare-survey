@@ -10,7 +10,6 @@ import com.mospi.questionare_survey.helperUtil.HelperUtils;
 import com.mospi.questionare_survey.helperUtil.ResponseUtils;
 import com.mospi.questionare_survey.jwt.JwtUtil;
 import com.mospi.questionare_survey.jwt.RefreshTokenService;
-import com.mospi.questionare_survey.repository.RefreshTokenRepo;
 import com.mospi.questionare_survey.repository.UserInfoRepo;
 import com.mospi.questionare_survey.request.AuthRequest;
 import com.mospi.questionare_survey.request.TokenRefreshRequest;
@@ -30,6 +29,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -51,7 +51,6 @@ public class AuthServiceImpl implements AuthService {
     private final Logger logger = LoggerFactory.getLogger(AuthServiceImpl.class);
     private final AuthenticationManager authenticationManager;
     private final RefreshTokenService refreshTokenService;
-    private final RefreshTokenRepo refreshTokenRepo;
     private final JwtUtil jwtUtil;
     private final UserInfoRepo userInfoRepo;
     private final UserDetailsService userDetailsService;
@@ -65,35 +64,42 @@ public class AuthServiceImpl implements AuthService {
 
         String ip = helperUtils.getClientIP(request);
 
-
         try {
             String username = req.getUsername();
             String password = req.getPassword();
 
-                if (!StringUtils.hasText(username)) {
-                    throw new SDDException(false, ErrorCode.AU1000);
-                }
-
-            UserInfo userinfo = userInfoRepo
-                        .findByUsernameIgnoreCaseAndIsActive(username, true);
-                Authentication auth = authenticationManager.authenticate(
-                            new UsernamePasswordAuthenticationToken(username, password));
-                    SecurityContextHolder.getContext().setAuthentication(auth);
-
-            // ================= TOKEN GENERATION =================
-
-            AuthResponse resp = new AuthResponse();
-
-            UserDetails userDetails = new User(username, "", List.of());
-
-            String accessToken;
-            if (fallbackCitizenRole != null) {
-                accessToken = jwtUtil.generateAccessTokenForGuestRole(userDetails, fallbackCitizenRole);
-            } else {
-                accessToken = jwtUtil.generateAccessToken1(userDetails, appUser);
+            if (!StringUtils.hasText(username)) {
+                throw new SDDException(false, ErrorCode.AU1000);
             }
 
-            String refreshToken = refreshTokenService.createRefreshToken1(appUser != null ? appUser.getUserId() : null, loginId, req.getDeviceInfo(), ip);
+            // 1. Authenticate credentials via AuthenticationManager
+            Authentication auth = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(username, password));
+            SecurityContextHolder.getContext().setAuthentication(auth);
+
+            // 2. Fetch UserInfo entity
+            UserInfo userinfo = userInfoRepo
+                    .findByUsernameIgnoreCaseAndIsActive(username, true);
+
+            if (userinfo == null) {
+                throw new SDDException(false, ErrorCode.AU1000);
+            }
+
+            // 3. Load UserDetails via UserDetailsService to get all assigned roles
+            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+
+            // 4. Determine default active role (e.g., first role from authorities or principal)
+            String defaultActiveRole = userDetails.getAuthorities().stream()
+                    .findFirst()
+                    .map(GrantedAuthority::getAuthority)
+                    .orElse("");
+
+            // ================= TOKEN GENERATION =================
+            AuthResponse resp = new AuthResponse();
+
+            // Pass userDetails, userinfo, and the activeRole to JwtUtil
+            String accessToken = jwtUtil.generateAccessToken(userDetails, userinfo, defaultActiveRole);
+            String refreshToken = refreshTokenService.createRefreshToken1(userinfo.getUserId(), userinfo.getUsername(), req.getDeviceInfo(), ip);
 
             resp.setAccessToken(accessToken);
             resp.setRefreshToken(refreshToken);
@@ -112,39 +118,39 @@ public class AuthServiceImpl implements AuthService {
         }
     }
 
+
     @Transactional(rollbackFor = {Exception.class})
     @Override
     public ApiResponse<AuthResponse> getRefresh(TokenRefreshRequest request, HttpServletRequest req) {
 
         try {
-
             String ip = helperUtils.getClientIP(req);
 
             Optional<VerifyTokenResponse> opt =
                     refreshTokenService.verifyAndRotate(request.getRefreshToken());
 
             if (opt.isEmpty()) {
-                throw new SDDException(false, ErrorCode.AU1001); // invalid refresh token
+                throw new SDDException(false, ErrorCode.AU1001); // Invalid refresh token
             }
 
             VerifyTokenResponse tokenData = opt.get();
-
-            AuthResponse resp = new AuthResponse();
-
             UserInfo userInfo = tokenData.getUser();
 
-            // Common UserDetails (works for both)
-            UserDetails userDetails =
-                    new org.springframework.security.core.userdetails.User(
-                            userInfo.getUsername(),
-                            "",
-                            List.of()
-                    );
+            // 1. Load UserDetails to get fresh roles from database
+            UserDetails userDetails = userDetailsService.loadUserByUsername(userInfo.getUsername());
 
-            // COMMON ACCESS TOKEN
-            String newAccessToken = jwtUtil.generateAccessToken(userDetails, userInfo);
-            // COMMON REFRESH TOKEN
-            String newRefreshToken = refreshTokenService.createRefreshToken1(userInfo != null ? userInfo.getUserId() : null, request.getDeviceInfo(), ip);
+            // 2. Keep the active role or fall back to the first available role
+            String activeRole = userDetails.getAuthorities().stream()
+                    .findFirst()
+                    .map(GrantedAuthority::getAuthority)
+                    .orElse("");
+
+            // ================= TOKEN RE-GENERATION =================
+            AuthResponse resp = new AuthResponse();
+
+            // Pass userDetails, userInfo, and activeRole
+            String newAccessToken = jwtUtil.generateAccessToken(userDetails, userInfo, activeRole);
+            String newRefreshToken = refreshTokenService.createRefreshToken1(userInfo.getUserId(), userInfo.getUsername(), request.getDeviceInfo(), ip);
 
             resp.setAccessToken(newAccessToken);
             resp.setRefreshToken(newRefreshToken);
@@ -153,11 +159,9 @@ public class AuthServiceImpl implements AuthService {
                     resp, new TypeReference<AuthResponse>() {}
             );
 
-        }
-        catch (SDDException e) {
+        } catch (SDDException e) {
             throw e;
-        }
-        catch (Exception ex) {
+        } catch (Exception ex) {
             log.error("Error while refreshing token", ex);
             throw new SDDException(false, "Token refresh failed");
         }
