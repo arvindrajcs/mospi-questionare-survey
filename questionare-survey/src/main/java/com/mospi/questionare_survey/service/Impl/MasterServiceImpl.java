@@ -123,11 +123,11 @@ public class MasterServiceImpl implements MasterService {
             MasMenu existingMenu = masMenuRepo.findById(request.getMenuId())
                     .orElseThrow(() -> new SDDException(false, ErrorCode.AU1002));
 
-            existingMenu.setActive(request.isActive());
+            existingMenu.setActive(request.getActive());
             existingMenu.setUpdatedBy(userId);
             masMenuRepo.save(existingMenu);
 
-            String message = request.isActive() ? "Menu activated successfully" : "Menu deactivated successfully";
+            String message = request.getActive() ? "Menu activated successfully" : "Menu deactivated successfully";
             logger.info("Menu status updated successfully by userId: {}", userId);
             DefaultResponse defaultResponse = new DefaultResponse(message);
             return ResponseUtils.createSuccessResponse(defaultResponse);
@@ -241,11 +241,11 @@ public class MasterServiceImpl implements MasterService {
             MasRole existingRole = masRoleRepo.findById(request.getRoleId())
                     .orElseThrow(() -> new SDDException(false, ErrorCode.AU1002));
 
-            existingRole.setActive(request.isActive());
+            existingRole.setActive(request.getActive());
             existingRole.setUpdatedBy(userId);
             masRoleRepo.save(existingRole);
 
-            String message = request.isActive() ? "Role activated successfully" : "Role deactivated successfully";
+            String message = request.getActive() ? "Role activated successfully" : "Role deactivated successfully";
             logger.info("Role status updated successfully by userId: {}", userId);
             DefaultResponse defaultResponse = new DefaultResponse(message);
             return ResponseUtils.createSuccessResponse(defaultResponse);
@@ -355,11 +355,11 @@ public class MasterServiceImpl implements MasterService {
             MasScheduleType existingScheduleType = masScheduleTypeRepo.findById(request.getScheduleTypeId())
                     .orElseThrow(() -> new SDDException(false, ErrorCode.AU1002));
 
-            existingScheduleType.setActive(request.isActive());
+            existingScheduleType.setActive(request.getActive());
             existingScheduleType.setUpdatedBy(userId);
             masScheduleTypeRepo.save(existingScheduleType);
 
-            String message = request.isActive() ? "Schedule Type activated successfully" : "Schedule Type deactivated successfully";
+            String message = request.getActive() ? "Schedule Type activated successfully" : "Schedule Type deactivated successfully";
             logger.info("Schedule Type status updated successfully by userId: {}", userId);
             DefaultResponse defaultResponse = new DefaultResponse(message);
             return ResponseUtils.createSuccessResponse(defaultResponse);
@@ -467,11 +467,11 @@ public class MasterServiceImpl implements MasterService {
             MasSurveyType existingSurveyType = masSurveyTypeRepo.findById(request.getSurveyTypeId())
                     .orElseThrow(() -> new SDDException(false, ErrorCode.AU1002));
 
-            existingSurveyType.setActive(request.isActive());
+            existingSurveyType.setActive(request.getActive());
             existingSurveyType.setUpdatedBy(userId);
             masSurveyTypeRepo.save(existingSurveyType);
 
-            String message = request.isActive() ? "Survey Type activated successfully" : "Survey Type deactivated successfully";
+            String message = request.getActive() ? "Survey Type activated successfully" : "Survey Type deactivated successfully";
             logger.info("Survey Type status updated successfully by userId: {}", userId);
             DefaultResponse defaultResponse = new DefaultResponse(message);
             return ResponseUtils.createSuccessResponse(defaultResponse);
@@ -579,11 +579,11 @@ public class MasterServiceImpl implements MasterService {
             MasDivision existingDivision = masDivisionRepo.findById(request.getDivisionId())
                     .orElseThrow(() -> new SDDException(false, ErrorCode.AU1002));
 
-            existingDivision.setActive(request.isActive());
+            existingDivision.setActive(request.getActive());
             existingDivision.setUpdatedBy(userId);
             masDivisionRepo.save(existingDivision);
 
-            String message = request.isActive() ? "Division activated successfully" : "Division deactivated successfully";
+            String message = request.getActive() ? "Division activated successfully" : "Division deactivated successfully";
             logger.info("Division status updated successfully by userId: {}", userId);
             DefaultResponse defaultResponse = new DefaultResponse(message);
             return ResponseUtils.createSuccessResponse(defaultResponse);

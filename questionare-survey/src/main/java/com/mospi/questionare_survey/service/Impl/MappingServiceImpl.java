@@ -100,11 +100,11 @@ public class MappingServiceImpl implements MappingService {
             MappingRoleMenu existingMenu = mappingRoleMenuRepo.findById(request.getRoleMenuMappingId())
                     .orElseThrow(() -> new SDDException(false, ErrorCode.AU1002));
 
-            existingMenu.setActive(request.isActive());
+            existingMenu.setActive(request.getActive());
             existingMenu.setUpdatedBy(userId);
             mappingRoleMenuRepo.save(existingMenu);
 
-            String message = request.isActive() ? "Role-Menu Mapped activated successfully" : "Role-Menu Mapped deactivated successfully";
+            String message = request.getActive() ? "Role-Menu Mapped activated successfully" : "Role-Menu Mapped deactivated successfully";
             logger.info("Role-Menu Mapped status updated successfully for MenuId: {}", existingMenu.getMenu().getMenuId());
             DefaultResponse defaultResponse = new DefaultResponse(message);
             return ResponseUtils.createSuccessResponse(defaultResponse);
@@ -239,11 +239,11 @@ public class MappingServiceImpl implements MappingService {
             MappingUserRole existingRole = mappingUserRoleRepo.findById(request.getUserRoleMappingId())
                     .orElseThrow(() -> new SDDException(false, ErrorCode.AU1002));
 
-            existingRole.setActive(request.isActive());
+            existingRole.setActive(request.getActive());
             existingRole.setUpdatedBy(userId);
             mappingUserRoleRepo.save(existingRole);
 
-            String message = request.isActive() ? "User-Role Mapped activated successfully" : "User-Role Mapped deactivated successfully";
+            String message = request.getActive() ? "User-Role Mapped activated successfully" : "User-Role Mapped deactivated successfully";
             logger.info("User-Role Mapped status updated successfully for RollId: {}", existingRole.getRole().getRoleId());
             DefaultResponse defaultResponse = new DefaultResponse(message);
             return ResponseUtils.createSuccessResponse(defaultResponse);

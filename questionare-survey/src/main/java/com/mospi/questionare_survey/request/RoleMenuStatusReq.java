@@ -10,5 +10,5 @@ import lombok.*;
 public class RoleMenuStatusReq {
 
     private Long roleMenuMappingId;
-    private boolean isActive;
+    private Boolean active;
 }

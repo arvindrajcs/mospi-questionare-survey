@@ -11,5 +11,5 @@ import lombok.NoArgsConstructor;
 @JsonIgnoreProperties(ignoreUnknown = false)
 public class RoleStatusReq {
     private Long roleId; // for update
-    private boolean isActive;
+    private Boolean active;
 }

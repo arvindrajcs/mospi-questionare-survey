@@ -28,14 +28,16 @@ public class UserInfoDetailsService implements UserDetailsService {
             throw new UsernameNotFoundException("User not found or inactive");
         }
 
-        String password = user.getPasswordHash();
+        // 2. Get the pre-encrypted password hash from database
+        String passwordHash = user.getPasswordHash();
 
-        // Database se user ke saare roles fetch karein
+        // 3. Fetch all assigned roles for this user
         List<String> roles = mappingUserRoleRepo.findRoleNamesByUserId(user.getUserId());
 
-        // Default active role pehla role set kar sakte hain
+        // 4. Set default active role (first role in the list)
         String defaultActiveRole = roles.isEmpty() ? null : roles.get(0);
 
-        return new UserInfoPrincipal(username, roles, defaultActiveRole, password);
+        // 5. Return Principal containing passwordHash so DaoAuthenticationProvider can verify it using BCryptPasswordEncoder
+        return new UserInfoPrincipal(username, roles, defaultActiveRole, passwordHash);
     }
 }

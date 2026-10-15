@@ -10,5 +10,5 @@ import lombok.*;
 public class UserRoleStatusReq {
 
     private Long userRoleMappingId;
-    private boolean isActive;
+    private Boolean active;
 }

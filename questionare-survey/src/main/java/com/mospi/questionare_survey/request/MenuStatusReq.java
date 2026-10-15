@@ -11,5 +11,5 @@ import lombok.NoArgsConstructor;
 @JsonIgnoreProperties(ignoreUnknown = false)
 public class MenuStatusReq {
     private Long menuId; // for update
-    private boolean isActive;
+    private Boolean active;
 }

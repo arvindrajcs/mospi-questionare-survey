@@ -11,5 +11,5 @@ import lombok.NoArgsConstructor;
 @JsonIgnoreProperties(ignoreUnknown = false)
 public class SurveyTypeStatusReq {
     private Long surveyTypeId;
-    private boolean isActive;
+    private Boolean active;
 }

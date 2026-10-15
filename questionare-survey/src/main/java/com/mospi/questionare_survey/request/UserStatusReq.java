@@ -11,5 +11,5 @@ import lombok.NoArgsConstructor;
 @JsonIgnoreProperties(ignoreUnknown = false)
 public class UserStatusReq {
     private Long userId; //Optional
-    private boolean isActive;
+    private Boolean active;
 }

@@ -44,10 +44,13 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
-    // 2. Authentication provider
+    // 2. Authentication provider (Updated for Spring Security 6.x / Spring Boot 3.3.x)
     @Bean
     public DaoAuthenticationProvider authenticationProvider() {
-        return new DaoAuthenticationProvider(userDetailsService);
+        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
+        authProvider.setUserDetailsService(userDetailsService); // Setter method ab fully support karta hai
+        authProvider.setPasswordEncoder(passwordEncoder());
+        return authProvider;
     }
 
     // 3. Authentication manager
@@ -105,6 +108,9 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/api/v1/auth/authentication/login",
                                 "/api/v1/auth/authentication/refresh",
+                                "/api/v1/user/user/create-user",
+                                "/api/v1/mas/role/create-role",
+                                "/api/v1/mapping/user-role/create",
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",

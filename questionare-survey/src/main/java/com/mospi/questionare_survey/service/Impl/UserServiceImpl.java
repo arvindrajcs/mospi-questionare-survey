@@ -127,11 +127,11 @@ public class UserServiceImpl implements UserService {
             UserInfo existingUser = userInfoRepo.findById(request.getUserId())
                     .orElseThrow(() -> new SDDException(false, ErrorCode.AU1003));
 
-            existingUser.setIsActive(request.isActive());
+            existingUser.setIsActive(request.getActive());
             existingUser.setUpdatedBy(userId);
             userInfoRepo.save(existingUser);
 
-            String message = request.isActive() ? "User activated successfully" : "User deactivated successfully";
+            String message = request.getActive() ? "User activated successfully" : "User deactivated successfully";
             logger.info("User status updated successfully for userId: {}", request.getUserId());
             DefaultResponse defaultResponse = new DefaultResponse(message);
             return ResponseUtils.createSuccessResponse(defaultResponse);

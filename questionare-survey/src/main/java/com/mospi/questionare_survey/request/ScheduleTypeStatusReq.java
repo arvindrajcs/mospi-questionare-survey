@@ -11,5 +11,5 @@ import lombok.NoArgsConstructor;
 @JsonIgnoreProperties(ignoreUnknown = false)
 public class ScheduleTypeStatusReq {
     private Long scheduleTypeId;
-    private boolean isActive;
+    private Boolean active;
 }

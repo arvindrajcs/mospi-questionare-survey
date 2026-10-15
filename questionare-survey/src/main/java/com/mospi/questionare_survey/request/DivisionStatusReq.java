@@ -11,5 +11,5 @@ import lombok.NoArgsConstructor;
 @JsonIgnoreProperties(ignoreUnknown = false)
 public class DivisionStatusReq {
     private Long divisionId;
-    private boolean isActive;
+    private Boolean active;
 }
