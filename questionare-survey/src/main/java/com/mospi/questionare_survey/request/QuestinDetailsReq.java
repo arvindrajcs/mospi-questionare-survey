@@ -10,8 +10,11 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = false)
 public class QuestinDetailsReq {
-
+    private Long surveyId;
+    private Long blockId;
+    private String questionNumber;
+    private String fieldInstructions;
     private String questionHeading;
     private Integer displayOrder;
-    private String fieldsData;
+    private boolean isMandatory;
 }

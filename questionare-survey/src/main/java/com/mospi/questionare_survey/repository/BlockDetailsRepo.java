@@ -9,9 +9,5 @@ import java.util.List;
 @Repository
 public interface BlockDetailsRepo extends JpaRepository<BlockDetails, Long> {
 
-    // Kisi specific schedule ke saare blocks display order ke hisaab se fetch karne ke liye
-    List<BlockDetails> findBySchedule_ScheduleIdOrderByDisplayOrderAsc(Long scheduleId);
 
-    // Saare active blocks fetch karne ke liye
-    List<BlockDetails> findByIsActiveTrueOrderByDisplayOrderAsc();
 }

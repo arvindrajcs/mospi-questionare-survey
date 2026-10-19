@@ -19,7 +19,6 @@ import java.time.OffsetDateTime;
 )
 @Getter
 @Setter
-@ToString(exclude = {"schedule"})
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -30,22 +29,27 @@ public class BlockDetails {
     @Column(name = "block_id", updatable = false, nullable = false)
     private Long blockId;
 
+    // Many templates can belong to one survey.
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "survey_id", nullable = false)
+    private SurveyDetails survey;
+
     // Many blocks belong to one Schedule Details record
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "schedule_id", nullable = false)
     private ScheduleDetails schedule;
 
-    @Column(name = "block_heading", nullable = false, columnDefinition = "TEXT")
+    @Column(name = "block_heading", nullable = false)
     private String blockHeading;
 
-    @Builder.Default
-    @Column(name = "display_order", nullable = false)
-    private Integer displayOrder = 1;
+    @Column(name = "block_Code", nullable = false)
+    private String blockCode;
 
-    // Maps PostgreSQL JSONB to a String column type
-    @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "fields_data", columnDefinition = "jsonb")
-    private String fieldsData;
+    // Many surveys belong to one Status
+    @ToString.Exclude
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "status_id", nullable = false)
+    private MasStatus status;
 
     @Builder.Default
     @Column(name = "is_active", nullable = false)

@@ -30,22 +30,38 @@ public class QuestionDetails {
     @Column(name = "question_id", updatable = false, nullable = false)
     private Long questionId;
 
+    // Many schedules belong to one Survey Details record
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "survey_id", nullable = false)
+    private SurveyDetails survey;
+
     // Many questions belong to one Block Details record
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "block_id", nullable = false)
     private BlockDetails block;
 
-    @Column(name = "question_heading", nullable = false, columnDefinition = "TEXT")
+    @Column(name = "question_number", nullable = false)
+    private String questionNumber;
+
+    @Column(name = "field_instructions", nullable = false)
+    private String fieldInstructions;
+
+    @Column(name = "question_heading", nullable = false)
     private String questionHeading;
 
     @Builder.Default
-    @Column(name = "display_order", nullable = false)
+    @Column(name = "display_order", nullable = true)
     private Integer displayOrder = 1;
 
-    // Maps PostgreSQL JSONB to a String column type
-    @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "fields_data", columnDefinition = "jsonb")
-    private String fieldsData;
+    @Builder.Default
+    @Column(name = "is_mandatory", nullable = false)
+    private boolean isMandatory = true;
+
+    // Many surveys belong to one Status
+    @ToString.Exclude
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "status_id", nullable = false)
+    private MasStatus status;
 
     @Builder.Default
     @Column(name = "is_active", nullable = false)

@@ -30,8 +30,14 @@ public class MasScheduleType {
     @Column(name = "schedule_type_id", updatable = false, nullable = false)
     private Long scheduleTypeId;
 
-    @Column(name = "description", length = 500)
+    @Column(name = "stage", length = 50)
+    private String stage;
+
+    @Column(name = "description", length = 100)
     private String description;
+
+    @Column(name = "remarks", length = 500)
+    private String remarks;
 
     @Builder.Default
     @Column(name = "is_active", nullable = false)

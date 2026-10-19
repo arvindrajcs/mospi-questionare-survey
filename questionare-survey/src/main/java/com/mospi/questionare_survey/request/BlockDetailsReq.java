@@ -5,16 +5,14 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
-
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = false)
 public class BlockDetailsReq {
+    private Long surveyId;
+    private Long scheduleId;
     private String blockHeading;
-    private Integer displayOrder;
-    private String fieldsData;
-    private List<QuestinDetailsReq> questionDetailsList; // Nested questions for this block
+    private String blockCode;
 }

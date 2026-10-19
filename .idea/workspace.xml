@@ -5,9 +5,34 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="2f6979b9-70e0-49f2-be03-61d6de089997" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/questionare-survey/src/main/java/com/mospi/questionare_survey/entity/MasEnquiryType.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/questionare-survey/src/main/java/com/mospi/questionare_survey/entity/MasFrequencyType.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/questionare-survey/src/main/java/com/mospi/questionare_survey/entity/MasScheduleAttributes.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/questionare-survey/src/main/java/com/mospi/questionare_survey/entity/MasSeasonalityFactor.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/questionare-survey/src/main/java/com/mospi/questionare_survey/entity/MasStatus.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/questionare-survey/src/main/java/com/mospi/questionare_survey/entity/TemplateDetails.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/questionare-survey/src/main/java/com/mospi/questionare_survey/repository/MasEnquiryTypeRepo.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/questionare-survey/src/main/java/com/mospi/questionare_survey/repository/MasFrequencyTypeRepo.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/questionare-survey/src/main/java/com/mospi/questionare_survey/repository/MasScheduleAttributesRepo.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/questionare-survey/src/main/java/com/mospi/questionare_survey/repository/MasSeasonalityFactorRepo.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/questionare-survey/src/main/java/com/mospi/questionare_survey/repository/MasStatusRepo.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/questionare-survey/src/main/java/com/mospi/questionare_survey/repository/TemplateDetailsRepo.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/questionare-survey/src/main/java/com/mospi/questionare_survey/request/CreateScheduleReq.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/questionare-survey/src/main/java/com/mospi/questionare_survey/request/CreateTemplateReq.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/questionare-survey/src/main/java/com/mospi/questionare_survey/config/CorsConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/questionare-survey/src/main/java/com/mospi/questionare_survey/config/CorsConfig.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/questionare-survey/src/main/java/com/mospi/questionare_survey/config/SecurityConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/questionare-survey/src/main/java/com/mospi/questionare_survey/config/SecurityConfig.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/questionare-survey/src/main/java/com/mospi/questionare_survey/controller/SurveyController.java" beforeDir="false" afterPath="$PROJECT_DIR$/questionare-survey/src/main/java/com/mospi/questionare_survey/controller/SurveyController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/questionare-survey/src/main/java/com/mospi/questionare_survey/entity/BlockDetails.java" beforeDir="false" afterPath="$PROJECT_DIR$/questionare-survey/src/main/java/com/mospi/questionare_survey/entity/BlockDetails.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/questionare-survey/src/main/java/com/mospi/questionare_survey/entity/MasScheduleType.java" beforeDir="false" afterPath="$PROJECT_DIR$/questionare-survey/src/main/java/com/mospi/questionare_survey/entity/MasScheduleType.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/questionare-survey/src/main/java/com/mospi/questionare_survey/entity/QuestionDetails.java" beforeDir="false" afterPath="$PROJECT_DIR$/questionare-survey/src/main/java/com/mospi/questionare_survey/entity/QuestionDetails.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/questionare-survey/src/main/java/com/mospi/questionare_survey/entity/ScheduleDetails.java" beforeDir="false" afterPath="$PROJECT_DIR$/questionare-survey/src/main/java/com/mospi/questionare_survey/entity/ScheduleDetails.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/questionare-survey/src/main/java/com/mospi/questionare_survey/entity/SurveyDetails.java" beforeDir="false" afterPath="$PROJECT_DIR$/questionare-survey/src/main/java/com/mospi/questionare_survey/entity/SurveyDetails.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/questionare-survey/src/main/java/com/mospi/questionare_survey/repository/BlockDetailsRepo.java" beforeDir="false" afterPath="$PROJECT_DIR$/questionare-survey/src/main/java/com/mospi/questionare_survey/repository/BlockDetailsRepo.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/questionare-survey/src/main/java/com/mospi/questionare_survey/repository/SurveyDetailsRepo.java" beforeDir="false" afterPath="$PROJECT_DIR$/questionare-survey/src/main/java/com/mospi/questionare_survey/repository/SurveyDetailsRepo.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/questionare-survey/src/main/java/com/mospi/questionare_survey/request/BlockDetailsReq.java" beforeDir="false" afterPath="$PROJECT_DIR$/questionare-survey/src/main/java/com/mospi/questionare_survey/request/BlockDetailsReq.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/questionare-survey/src/main/java/com/mospi/questionare_survey/request/CreateSurveyReq.java" beforeDir="false" afterPath="$PROJECT_DIR$/questionare-survey/src/main/java/com/mospi/questionare_survey/request/CreateSurveyReq.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/questionare-survey/src/main/java/com/mospi/questionare_survey/request/QuestinDetailsReq.java" beforeDir="false" afterPath="$PROJECT_DIR$/questionare-survey/src/main/java/com/mospi/questionare_survey/request/QuestinDetailsReq.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/questionare-survey/src/main/java/com/mospi/questionare_survey/service/Impl/SurveyServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/questionare-survey/src/main/java/com/mospi/questionare_survey/service/Impl/SurveyServiceImpl.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/questionare-survey/src/main/java/com/mospi/questionare_survey/service/SurveyService.java" beforeDir="false" afterPath="$PROJECT_DIR$/questionare-survey/src/main/java/com/mospi/questionare_survey/service/SurveyService.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -18,8 +43,8 @@
     <option name="RECENT_TEMPLATES">
       <list>
         <option value="Enum" />
-        <option value="Class" />
         <option value="Interface" />
+        <option value="Class" />
       </list>
     </option>
   </component>

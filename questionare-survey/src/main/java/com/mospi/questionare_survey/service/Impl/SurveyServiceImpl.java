@@ -6,9 +6,7 @@ import com.mospi.questionare_survey.exception.SDDException;
 import com.mospi.questionare_survey.helperUtil.HelperUtils;
 import com.mospi.questionare_survey.helperUtil.ResponseUtils;
 import com.mospi.questionare_survey.repository.*;
-import com.mospi.questionare_survey.request.BlockDetailsReq;
-import com.mospi.questionare_survey.request.CreateSurveyReq;
-import com.mospi.questionare_survey.request.QuestinDetailsReq;
+import com.mospi.questionare_survey.request.*;
 import com.mospi.questionare_survey.response.ApiResponse;
 import com.mospi.questionare_survey.response.DefaultResponse;
 import com.mospi.questionare_survey.service.SurveyService;
@@ -20,7 +18,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
 
 @Service
 @RequiredArgsConstructor
@@ -30,7 +27,10 @@ public class SurveyServiceImpl implements SurveyService {
     private final Logger logger = LoggerFactory.getLogger(SurveyServiceImpl.class);
 
     @Autowired
-    private HelperUtils helperUtill;
+    private HelperUtils helperUtils;
+
+    @Autowired
+    private MasStatusRepo masStatusRepo;
 
     @Autowired
     private MasSurveyTypeRepo masSurveyTypeRepo;
@@ -53,85 +53,65 @@ public class SurveyServiceImpl implements SurveyService {
     @Autowired
     private QuestionDetailsRepo questionDetailsRepo;
 
+    @Autowired
+    private MasEnquiryTypeRepo masEnquiryTypeRepo;
+
+    @Autowired
+    private MasFrequencyTypeRepo masFrequencyTypeRepo;
+
+    @Autowired
+    private MasSeasonalityFactorRepo masSeasonalityFactorRepo;
+
+    @Autowired
+    private TemplateDetailsRepo templateDetailsRepo;
+
+    @Autowired
+    private MasScheduleAttributesRepo masScheduleAttributesRepo;
+
+
     @Transactional(rollbackFor = Exception.class)
     @Override
-    public ApiResponse<DefaultResponse> createSurveyDesign(Long userId, CreateSurveyReq request) {
+    public ApiResponse<DefaultResponse> createSurveyDetails(Long userId, CreateSurveyReq request) {
         logger.info("Starting survey design creation for user: {}", userId);
 
         try {
             // 1. Validate and fetch master dependencies
-            MasSurveyType surveyType = masSurveyTypeRepo.findById(request.getSurveyTypeId())
-                    .orElseThrow(() -> new SDDException(false, "Survey Type not found for ID: " + request.getSurveyTypeId()));
-
             MasDivision division = masDivisionRepo.findById(request.getDivisionId())
                     .orElseThrow(() -> new SDDException(false, "Division not found for ID: " + request.getDivisionId()));
 
-            MasScheduleType scheduleType = masScheduleTypeRepo.findById(request.getScheduleTypeId())
-                    .orElseThrow(() -> new SDDException(false, "Schedule Type not found for ID: " + request.getScheduleTypeId()));
+            MasEnquiryType enquiryType = masEnquiryTypeRepo.findById(request.getEnquiryTypeId())
+                    .orElseThrow(() -> new SDDException(false, "Enquiry Type not found for ID: " + request.getEnquiryTypeId()));
 
-            // 2. Generate Survey Code (e.g., TITLE-2026)
-            String currentYear = String.valueOf(LocalDate.now().getYear());
-            String sanitizedTitle = request.getTitle().trim().replaceAll("\\s+", "-").toUpperCase();
-            String surveyCode = sanitizedTitle + "-" + currentYear;
+            MasFrequencyType frequencyType = masFrequencyTypeRepo.findById(request.getFrequencyTypeId())
+                    .orElseThrow(() -> new SDDException(false, "Frequency Type not found for ID: " + request.getFrequencyTypeId()));
 
-            // Optional: Check if survey code already exists to avoid unique constraint violations
-            if (surveyDetailsRepo.existsBySurveyCode(surveyCode)) {
-                surveyCode = surveyCode + "-" + System.currentTimeMillis(); // ensure uniqueness if duplicate title exists
-            }
+            MasSeasonalityFactor seasonalityFactor = masSeasonalityFactorRepo.findById(request.getSeasonalityFactorId())
+                    .orElseThrow(() -> new SDDException(false, "Seasonality Factor not found for ID: " + request.getSeasonalityFactorId()));
 
-            // 3. Create and Save SurveyDetails
-            SurveyDetails survey = new SurveyDetails();
-            survey.setTitle(request.getTitle());
-            survey.setSurveyType(surveyType);
-            survey.setSurveyCode(surveyCode);
-            survey.setDivision(division);
-            survey.setDescription(request.getDescription());
-            survey.setTemplateName(request.getTemplateName());
-            survey.setActive(true);
-            survey.setCreatedBy(userId);
+            // 3. Create and Save SurveyDetails using the builder
+            SurveyDetails survey = SurveyDetails.builder()
+                    .title(request.getTitle())
+                    .periodicCycle(request.getPeriodicCycle())
+                    .surveyCode(request.getSurveyCode())
+                    .division(division)
+                    .enquiryType(enquiryType)
+                    .frequencyType(frequencyType)
+                    .seasonalityFactor(seasonalityFactor)
+                    .surveyDuration(request.getSurveyDuration())
+                    .ruralSamplingFrame(request.getRuralSamplingFrame())
+                    .urbanSamplingFrame(request.getUrbanSamplingFrame())
+                    .samplingSize(request.getSamplingSize())
+                    .surveyObjective(request.getSurveyObjective())
+                    .remarks(request.getRemarks())
+//                    .status(masStatusRepo.findById(1L).orElseThrow(() -> new SDDException(false, "Status not found")))
+                    .status(masStatusRepo.getReferenceById(1L))
+                    .isActive(true)
+                    .createdBy(userId)
+                    .build();
 
-            survey = surveyDetailsRepo.save(survey);
+            surveyDetailsRepo.save(survey);
 
-            // 4. Create and Save ScheduleDetails
-            ScheduleDetails schedule = new ScheduleDetails();
-            schedule.setSurvey(survey);
-            schedule.setScheduleType(scheduleType);
-            schedule.setActive(true);
-            schedule.setCreatedBy(userId);
-
-            schedule = scheduleDetailsRepo.save(schedule);
-
-            // 5. Create and Save BlockDetails and their QuestionDetails
-            if (request.getBlockDetailsList() != null && !request.getBlockDetailsList().isEmpty()) {
-                for (BlockDetailsReq blockReq : request.getBlockDetailsList()) {
-                    BlockDetails block = new BlockDetails();
-                    block.setSchedule(schedule);
-                    block.setBlockHeading(blockReq.getBlockHeading());
-                    block.setDisplayOrder(blockReq.getDisplayOrder() != null ? blockReq.getDisplayOrder() : 1);
-                    block.setFieldsData(blockReq.getFieldsData());
-                    block.setActive(true);
-                    block.setCreatedBy(userId);
-
-                    block = blockDetailsRepo.save(block);
-
-                    // Save Questions under this Block
-                    if (blockReq.getQuestionDetailsList() != null && !blockReq.getQuestionDetailsList().isEmpty()) {
-                        for (QuestinDetailsReq qReq : blockReq.getQuestionDetailsList()) {
-                            QuestionDetails question = new QuestionDetails();
-                            question.setBlock(block);
-                            question.setQuestionHeading(qReq.getQuestionHeading());
-                            question.setDisplayOrder(qReq.getDisplayOrder() != null ? qReq.getDisplayOrder() : 1);
-                            question.setFieldsData(qReq.getFieldsData());
-                            question.setActive(true);
-                            question.setCreatedBy(userId);
-
-                            questionDetailsRepo.save(question);
-                        }
-                    }
-                }
-            }
-
-            logger.info("Survey design created successfully with code: {}", surveyCode);
+            logger.info("Survey design created successfully with code: {}", request.getSurveyCode());
 
             DefaultResponse defaultResponse = new DefaultResponse();
             defaultResponse.setMsg("Survey design created successfully");
@@ -145,6 +125,177 @@ public class SurveyServiceImpl implements SurveyService {
         }
     }
 
+
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public ApiResponse<DefaultResponse> createTemplateDetails(Long userId, CreateTemplateReq request) {
+        logger.info("Starting template details creation for survey ID: {} by user: {}", request.getSurveyId(), userId);
+
+        try {
+            // 1. Validate and fetch parent SurveyDetails entity
+            SurveyDetails survey = surveyDetailsRepo.findById(request.getSurveyId())
+                    .orElseThrow(() -> new SDDException(false, "Survey not found for ID: " + request.getSurveyId()));
+
+            // 2. Build and save TemplateDetails
+            TemplateDetails templateDetails = TemplateDetails.builder()
+                    .templateName(request.getTemplateName())
+                    .templateType(request.getTemplateType())
+                    .survey(survey)
+                    .status(masStatusRepo.getReferenceById(1L))
+                    .isActive(true)
+                    .createdBy(userId)
+                    .build();
+
+            templateDetailsRepo.save(templateDetails);
+
+            logger.info("Template details created successfully for survey ID: {}", request.getSurveyId());
+
+            // 3. Prepare success response
+            DefaultResponse defaultResponse = new DefaultResponse();
+            defaultResponse.setMsg("Template details created successfully");
+            return ResponseUtils.createSuccessResponse(defaultResponse, new TypeReference<DefaultResponse>() {});
+
+        } catch (SDDException e) {
+            throw e;
+        } catch (Exception e) {
+            logger.error("Error while creating template details", e);
+            throw new SDDException(false, "Unexpected error during template details creation");
+        }
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public ApiResponse<DefaultResponse> createScheduleDetails(Long userId, CreateScheduleReq request) {
+        logger.info("Starting schedule details creation for survey ID: {} by user: {}", request.getSurveyId(), userId);
+
+        try {
+            // 1. Validate and fetch parent SurveyDetails entity
+            SurveyDetails survey = surveyDetailsRepo.findById(request.getSurveyId())
+                    .orElseThrow(() -> new SDDException(false, "Survey not found for ID: " + request.getSurveyId()));
+
+            // 2. Validate and fetch MasScheduleType master dependency
+            MasScheduleType scheduleType = masScheduleTypeRepo.findById(request.getScheduleTypeId())
+                    .orElseThrow(() -> new SDDException(false, "Schedule Type not found for ID: " + request.getScheduleTypeId()));
+
+            // 3. Validate and fetch MasScheduleAttributes master dependency
+            MasScheduleAttributes scheduleAttributes = masScheduleAttributesRepo.findById(request.getScheduleAttributesId())
+                    .orElseThrow(() -> new SDDException(false, "Schedule Attributes not found for ID: " + request.getScheduleAttributesId()));
+
+            // 4. Build and save ScheduleDetails
+            ScheduleDetails scheduleDetails = ScheduleDetails.builder()
+                    .survey(survey)
+                    .scheduleType(scheduleType)
+                    .scheduleAttributes(scheduleAttributes)
+                    .status(masStatusRepo.getReferenceById(1L))
+                    .isActive(true)
+                    .createdBy(userId)
+                    .build();
+
+            scheduleDetailsRepo.save(scheduleDetails);
+
+            logger.info("Schedule details created successfully for survey ID: {}", request.getSurveyId());
+
+            // 5. Prepare success response
+            DefaultResponse defaultResponse = new DefaultResponse();
+            defaultResponse.setMsg("Schedule details created successfully");
+            return ResponseUtils.createSuccessResponse(defaultResponse, new TypeReference<DefaultResponse>() {});
+
+        } catch (SDDException e) {
+            throw e;
+        } catch (Exception e) {
+            logger.error("Error while creating schedule details", e);
+            throw new SDDException(false, "Unexpected error during schedule details creation");
+        }
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public ApiResponse<DefaultResponse> createBlockDetails(Long userId, BlockDetailsReq request) {
+        logger.info("Starting block details creation for schedule ID: {} and survey ID: {} by user: {}",
+                request.getScheduleId(), request.getSurveyId(), userId);
+
+        try {
+            // 1. Validate and fetch parent SurveyDetails entity
+            SurveyDetails survey = surveyDetailsRepo.findById(request.getSurveyId())
+                    .orElseThrow(() -> new SDDException(false, "Survey not found for ID: " + request.getSurveyId()));
+
+            // 2. Validate and fetch parent ScheduleDetails entity
+            ScheduleDetails schedule = scheduleDetailsRepo.findById(request.getScheduleId())
+                    .orElseThrow(() -> new SDDException(false, "Schedule not found for ID: " + request.getScheduleId()));
+
+            // 3. Build and save BlockDetails
+            BlockDetails blockDetails = BlockDetails.builder()
+                    .survey(survey)
+                    .schedule(schedule)
+                    .blockHeading(request.getBlockHeading())
+                    .blockCode(request.getBlockCode())
+                    .status(masStatusRepo.getReferenceById(1L))
+                    .isActive(true)
+                    .createdBy(userId)
+                    .build();
+
+            blockDetailsRepo.save(blockDetails);
+
+            logger.info("Block details created successfully with code: {}", request.getBlockCode());
+
+            // 4. Prepare success response
+            DefaultResponse defaultResponse = new DefaultResponse();
+            defaultResponse.setMsg("Block details created successfully");
+            return ResponseUtils.createSuccessResponse(defaultResponse, new TypeReference<DefaultResponse>() {});
+
+        } catch (SDDException e) {
+            throw e;
+        } catch (Exception e) {
+            logger.error("Error while creating block details", e);
+            throw new SDDException(false, "Unexpected error during block details creation");
+        }
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public ApiResponse<DefaultResponse> createQuestionDetails(Long userId, QuestinDetailsReq request) {
+        logger.info("Starting question details creation for block ID: {} and survey ID: {} by user: {}",
+                request.getBlockId(), request.getSurveyId(), userId);
+
+        try {
+            // 1. Validate and fetch parent SurveyDetails entity
+            SurveyDetails survey = surveyDetailsRepo.findById(request.getSurveyId())
+                    .orElseThrow(() -> new SDDException(false, "Survey not found for ID: " + request.getSurveyId()));
+
+            // 2. Validate and fetch parent BlockDetails entity
+            BlockDetails block = blockDetailsRepo.findById(request.getBlockId())
+                    .orElseThrow(() -> new SDDException(false, "Block not found for ID: " + request.getBlockId()));
+
+            // 3. Build and save QuestionDetails
+            QuestionDetails questionDetails = QuestionDetails.builder()
+                    .survey(survey)
+                    .block(block)
+                    .questionNumber(request.getQuestionNumber())
+                    .fieldInstructions(request.getFieldInstructions())
+                    .questionHeading(request.getQuestionHeading())
+                    .displayOrder(request.getDisplayOrder() != null ? request.getDisplayOrder() : 1)
+                    .isMandatory(request.isMandatory())
+                    .status(masStatusRepo.getReferenceById(1L))
+                    .isActive(true)
+                    .createdBy(userId)
+                    .build();
+
+            questionDetailsRepo.save(questionDetails);
+
+            logger.info("Question details created successfully with number: {}", request.getQuestionNumber());
+
+            // 4. Prepare success response
+            DefaultResponse defaultResponse = new DefaultResponse();
+            defaultResponse.setMsg("Question details created successfully");
+            return ResponseUtils.createSuccessResponse(defaultResponse, new TypeReference<DefaultResponse>() {});
+
+        } catch (SDDException e) {
+            throw e;
+        } catch (Exception e) {
+            logger.error("Error while creating question details", e);
+            throw new SDDException(false, "Unexpected error during question details creation");
+        }
+    }
 
 
 }

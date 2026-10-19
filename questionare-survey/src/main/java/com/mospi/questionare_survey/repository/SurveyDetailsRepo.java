@@ -19,9 +19,6 @@ public interface SurveyDetailsRepo extends JpaRepository<SurveyDetails, Long> {
     // Kisi specific division ke saare surveys fetch karne ke liye
     List<SurveyDetails> findByDivision_DivisionId(Long divisionId);
 
-    // Kisi specific survey type ke saare surveys fetch karne ke liye
-    List<SurveyDetails> findBySurveyType_SurveyTypeId(Long surveyTypeId);
-
     // Saare active surveys fetch karne ke liye
     List<SurveyDetails> findByIsActiveTrue();
 }

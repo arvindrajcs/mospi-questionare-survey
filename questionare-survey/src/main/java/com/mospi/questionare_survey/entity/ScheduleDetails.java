@@ -17,7 +17,6 @@ import java.time.OffsetDateTime;
 )
 @Getter
 @Setter
-@ToString(exclude = {"survey", "scheduleType"})
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -37,6 +36,17 @@ public class ScheduleDetails {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "schedule_type_id", nullable = false)
     private MasScheduleType scheduleType;
+
+    // Many schedules belong to one Schedule Attribute master record
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "schedule_attributes_id", nullable = false)
+    private MasScheduleAttributes scheduleAttributes;
+
+    // Many surveys belong to one Status
+    @ToString.Exclude
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "status_id", nullable = false)
+    private MasStatus status;
 
     @Builder.Default
     @Column(name = "is_active", nullable = false)

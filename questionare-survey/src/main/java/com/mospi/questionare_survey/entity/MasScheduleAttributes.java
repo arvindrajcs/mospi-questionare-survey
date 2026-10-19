@@ -1,0 +1,56 @@
+package com.mospi.questionare_survey.entity;
+
+import jakarta.persistence.*;
+import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
+import java.time.OffsetDateTime;
+
+@Entity
+@Table(
+        name = "mst_schedule_attributes",
+        indexes = {
+                @Index(name = "idx_mst_schedule_attributes_description", columnList = "description")
+        },
+        uniqueConstraints = {
+                @UniqueConstraint(name = "uk_mst_schedule_attributes_description", columnNames = {"description"})
+        }
+)
+@Getter
+@Setter
+@ToString
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class MasScheduleAttributes {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "schedule_attributes_id", updatable = false, nullable = false)
+    private Long scheduleAttributesId;
+
+    @Column(name = "description", length = 100)
+    private String description;
+
+    @Column(name = "type", length = 50)
+    private String type;
+
+    @Builder.Default
+    @Column(name = "is_active", nullable = false)
+    private boolean isActive = true;
+
+    @Column(name = "created_by")
+    private Long createdBy;
+
+    @CreationTimestamp
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private OffsetDateTime createdAt;
+
+    @Column(name = "updated_by")
+    private Long updatedBy;
+
+    @UpdateTimestamp
+    @Column(name = "updated_at")
+    private OffsetDateTime updatedAt;
+}
