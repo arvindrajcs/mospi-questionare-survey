@@ -5,6 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -15,6 +17,10 @@ public class QuestinDetailsReq {
     private String questionNumber;
     private String fieldInstructions;
     private String questionHeading;
-    private Integer displayOrder;
+    private String dataFormate;
+    private String dropDownValue;
     private boolean isMandatory;
+
+    private ArrayList<SkipConditionReq> skipConditionReq;
+    private ArrayList<QuestionValidationReq> questionValidationReq;
 }

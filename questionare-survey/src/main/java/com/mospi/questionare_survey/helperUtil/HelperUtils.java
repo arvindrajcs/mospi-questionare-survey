@@ -10,19 +10,17 @@ import org.springframework.stereotype.Component;
 public class HelperUtils {
 
     public Pageable getPageable(Long page, Long limit) {
-
         int pageNo = (page == null || page < 1) ? 1 : page.intValue();
         int pageSize = (limit == null || limit < 1) ? 5 : limit.intValue();
 
         return PageRequest.of(
                 pageNo - 1,
                 pageSize,
-                Sort.by("menuOrder").ascending() // Or your preferred sort field
+                Sort.by("createdAt").descending() // Safe default property present across entities
         );
     }
 
     public Pageable getPageable(Long page, Long limit, Sort sort) {
-
         int pageNo = (page == null || page < 1) ? 1 : page.intValue();
         int pageSize = (limit == null || limit < 1) ? 5 : limit.intValue();
 
@@ -61,5 +59,4 @@ public class HelperUtils {
 
         return ip;
     }
-
 }

@@ -3,23 +3,22 @@ package com.mospi.questionare_survey.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UpdateTimestamp;
-import org.hibernate.type.SqlTypes;
 
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(
         name = "question_details",
         indexes = {
                 @Index(name = "idx_question_details_block", columnList = "block_id"),
-                @Index(name = "idx_question_details_order", columnList = "display_order")
         }
 )
 @Getter
 @Setter
-@ToString(exclude = {"block"})
+@ToString // No old-style exclude parameters here
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -30,12 +29,14 @@ public class QuestionDetails {
     @Column(name = "question_id", updatable = false, nullable = false)
     private Long questionId;
 
-    // Many schedules belong to one Survey Details record
+    // Many questions belong to one Survey Details record
+    @ToString.Exclude
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "survey_id", nullable = false)
     private SurveyDetails survey;
 
     // Many questions belong to one Block Details record
+    @ToString.Exclude
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "block_id", nullable = false)
     private BlockDetails block;
@@ -46,18 +47,32 @@ public class QuestionDetails {
     @Column(name = "field_instructions", nullable = false)
     private String fieldInstructions;
 
+    @Column(name = "data_formate", nullable = false)
+    private String dataFormate;
+
+    @Column(name = "drop_down_value", columnDefinition = "TEXT")
+    private String dropDownValue;
+
     @Column(name = "question_heading", nullable = false)
     private String questionHeading;
-
-    @Builder.Default
-    @Column(name = "display_order", nullable = true)
-    private Integer displayOrder = 1;
 
     @Builder.Default
     @Column(name = "is_mandatory", nullable = false)
     private boolean isMandatory = true;
 
-    // Many surveys belong to one Status
+    // --- ADD THESE TWO MAPPINGS ---
+    @ToString.Exclude
+    @Builder.Default
+    @OneToMany(mappedBy = "question", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<SkipCondition> skipConditions = new ArrayList<>();
+
+    @ToString.Exclude
+    @Builder.Default
+    @OneToMany(mappedBy = "question", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<QuestionValidation> validations = new ArrayList<>();
+    // ----------------------------
+
+    // Many questions belong to one Status
     @ToString.Exclude
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "status_id", nullable = false)
