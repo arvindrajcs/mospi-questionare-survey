@@ -48,5 +48,7 @@ public interface SurveyService {
     ApiResponseWithPageable<List<QuestionResp>> getQuestionDetailsByIdOrUser(GetQuestionReq request);
     ApiResponseWithPageable<List<QuestionResp>> getAllQuestionDetails(GetQuestionReq request);
 
+    //**********************TEST SURVEY******************************/
 
+    ApiResponse<TestSurveyResp> getTestSurveyDetails(TestSurveyReq request);
 }

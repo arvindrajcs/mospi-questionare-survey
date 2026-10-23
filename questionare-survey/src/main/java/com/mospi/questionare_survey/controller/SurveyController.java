@@ -227,4 +227,13 @@ public class SurveyController {
         return new ResponseEntity<>(surveyService.getAllQuestionDetails(request), HttpStatus.OK);
     }
 
+    //**********************TEST SURVEY******************************/
+
+    @Operation(summary = "This API is used to get all survey details for Test Survey  by survey ID")
+    @PostMapping("/get/test-survey")
+    public ResponseEntity<ApiResponse<TestSurveyResp>> getTestSurveyDetails(@RequestBody TestSurveyReq request) {
+        logger.info("trying to call getTestSurveyDetails API");
+        return new ResponseEntity<>(surveyService.getTestSurveyDetails(request), HttpStatus.OK);
+    }
+
 }

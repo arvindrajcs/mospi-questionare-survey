@@ -44,10 +44,10 @@ public class QuestionDetails {
     @Column(name = "question_number", nullable = false)
     private String questionNumber;
 
-    @Column(name = "field_instructions", nullable = false)
+    @Column(name = "field_instructions", nullable = true)
     private String fieldInstructions;
 
-    @Column(name = "data_formate", nullable = false)
+    @Column(name = "data_formate", nullable = true)
     private String dataFormate;
 
     @Column(name = "drop_down_value", columnDefinition = "TEXT")
