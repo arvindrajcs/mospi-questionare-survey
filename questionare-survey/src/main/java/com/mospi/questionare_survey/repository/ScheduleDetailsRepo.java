@@ -12,4 +12,5 @@ import java.util.List;
 public interface ScheduleDetailsRepo extends JpaRepository<ScheduleDetails, Long> {
 
     Page<ScheduleDetails> findByCreatedBy(Long userId, Pageable pageable);
+    Page<ScheduleDetails> findBySurvey_SurveyId(Long surveyId, Pageable pageable);
 }

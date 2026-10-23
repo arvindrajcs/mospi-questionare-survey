@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 @JsonIgnoreProperties(ignoreUnknown = false)
 public class GetBlockReq {
     private Long blockId;
+    private Long surveyId;
     private Long userId;
     private Long page;
     private Long limit;

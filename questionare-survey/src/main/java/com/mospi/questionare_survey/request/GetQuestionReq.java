@@ -11,6 +11,7 @@ import lombok.Setter;
 @AllArgsConstructor
 public class GetQuestionReq {
     private Long questionId;
+    private Long surveyId;
     private Long userId;
     private Long page;
     private Long limit;

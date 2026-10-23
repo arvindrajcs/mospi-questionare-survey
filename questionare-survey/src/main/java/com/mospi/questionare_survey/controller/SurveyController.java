@@ -58,14 +58,14 @@ public class SurveyController {
 
     @Operation(summary = "This API is used to get survey details by ID")
     @PostMapping("/get/survey-details")
-    public ResponseEntity<ApiResponseWithPageable<List<SurveyDetails>>> getSurveyDetailsById(@RequestBody GetSurveyReq request) {
+    public ResponseEntity<ApiResponseWithPageable<List<SurveyResp>>> getSurveyDetailsById(@RequestBody GetSurveyReq request) {
         logger.info("trying to call getSurveyDetailsById API for ID: {}", request.getSurveyId());
         return new ResponseEntity<>(surveyService.getSurveyDetailsById(request), HttpStatus.OK);
     }
 
     @Operation(summary = "This API is used to get all survey details with pagination")
     @PostMapping("/get/all-survey-details")
-    public ResponseEntity<ApiResponseWithPageable<List<SurveyDetails>>> getAllSurveyDetails(@RequestBody GetSurveyReq request) {
+    public ResponseEntity<ApiResponseWithPageable<List<SurveyResp>>> getAllSurveyDetails(@RequestBody GetSurveyReq request) {
         logger.info("trying to call getAllSurveyDetails API");
         return new ResponseEntity<>(surveyService.getAllSurveyDetails(request), HttpStatus.OK);
     }
@@ -98,14 +98,14 @@ public class SurveyController {
 
     @Operation(summary = "This API is used to get template details by ID")
     @PostMapping("/get/template-details")
-    public ResponseEntity<ApiResponseWithPageable<List<TemplateDetails>>>  getTemplateDetailsById(@RequestBody GetTemplateReq request) {
+    public ResponseEntity<ApiResponseWithPageable<List<TemplateResp>>>  getTemplateDetailsById(@RequestBody GetTemplateReq request) {
         logger.info("trying to call getTemplateDetailsById API for ID: {}", request.getTemplateId());
         return new ResponseEntity<>(surveyService.getTemplateDetailsById(request), HttpStatus.OK);
     }
 
     @Operation(summary = "This API is used to get all template details with pagination")
     @PostMapping("/get/all-template-details")
-    public ResponseEntity<ApiResponseWithPageable<List<TemplateDetails>>> getAllTemplateDetails(@RequestBody GetTemplateReq request) {
+    public ResponseEntity<ApiResponseWithPageable<List<TemplateResp>>> getAllTemplateDetails(@RequestBody GetTemplateReq request) {
         logger.info("trying to call getAllTemplateDetails API");
         return new ResponseEntity<>(surveyService.getAllTemplateDetails(request), HttpStatus.OK);
     }
@@ -138,14 +138,14 @@ public class SurveyController {
 
     @Operation(summary = "This API is used to get schedule details by schedule ID or User ID with pagination")
     @PostMapping("/get/schedule-details")
-    public ResponseEntity<ApiResponseWithPageable<List<ScheduleDetails>>> getScheduleDetails(@RequestBody GetScheduleReq request) {
+    public ResponseEntity<ApiResponseWithPageable<List<ScheduleResp>>> getScheduleDetails(@RequestBody GetScheduleReq request) {
         logger.info("trying to call getScheduleDetails API");
         return new ResponseEntity<>(surveyService.getScheduleDetailsByIdOrUser(request), HttpStatus.OK);
     }
 
     @Operation(summary = "This API is used to get all schedule details with pagination")
     @PostMapping("/get/all-schedule-details")
-    public ResponseEntity<ApiResponseWithPageable<List<ScheduleDetails>>> getAllScheduleDetails(@RequestBody GetScheduleReq request) {
+    public ResponseEntity<ApiResponseWithPageable<List<ScheduleResp>>> getAllScheduleDetails(@RequestBody GetScheduleReq request) {
         logger.info("trying to call getAllScheduleDetails API");
         return new ResponseEntity<>(surveyService.getAllScheduleDetails(request), HttpStatus.OK);
     }
@@ -222,7 +222,7 @@ public class SurveyController {
 
     @Operation(summary = "This API is used to get all question details with pagination")
     @PostMapping("/get/all-question-details")
-    public ResponseEntity<ApiResponseWithPageable<List<QuestionDetails>>> getAllQuestionDetails(@RequestBody GetQuestionReq request) {
+    public ResponseEntity<ApiResponseWithPageable<List<QuestionResp>>> getAllQuestionDetails(@RequestBody GetQuestionReq request) {
         logger.info("trying to call getAllQuestionDetails API");
         return new ResponseEntity<>(surveyService.getAllQuestionDetails(request), HttpStatus.OK);
     }

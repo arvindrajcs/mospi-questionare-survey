@@ -225,9 +225,10 @@ public class SurveyServiceImpl implements SurveyService {
         }
     }
 
+    @Transactional(readOnly = true)
     @Override
-    public ApiResponseWithPageable<List<SurveyDetails>> getSurveyDetailsById(GetSurveyReq request) {
-        logger.info("Fetching survey details for surveyId: {} or userId: {} with pagination",
+    public ApiResponseWithPageable<List<SurveyResp>> getSurveyDetailsById(GetSurveyReq request) {
+        logger.info("Fetching survey details with DTO mapping for surveyId: {} or userId: {} with pagination",
                 request.getSurveyId(), request.getUserId());
 
         try {
@@ -235,18 +236,13 @@ public class SurveyServiceImpl implements SurveyService {
             Page<SurveyDetails> surveyPage;
 
             if (request.getSurveyId() != null) {
-                // 1. If surveyId is provided, wrap single record in a Page
                 Optional<SurveyDetails> optionalSurvey = surveyDetailsRepo.findById(request.getSurveyId());
-
                 List<SurveyDetails> content = optionalSurvey.map(List::of).orElse(List.of());
                 long totalElements = optionalSurvey.isPresent() ? 1 : 0;
-
                 surveyPage = new PageImpl<>(content, pageable, totalElements);
 
             } else if (request.getUserId() != null) {
-                // 2. If userId is provided, fetch paginated list for that user
                 surveyPage = surveyDetailsRepo.findByCreatedBy(request.getUserId(), pageable);
-
             } else {
                 throw new SDDException(false, "Either surveyId or userId must be provided");
             }
@@ -255,10 +251,38 @@ public class SurveyServiceImpl implements SurveyService {
                 throw new SDDException(false, "No survey details found");
             }
 
-            logger.info("Survey details fetched successfully..");
+            // Map SurveyDetails entities to SurveyResp DTOs
+            List<SurveyResp> responseList = surveyPage.getContent().stream().map(survey ->
+                    SurveyResp.builder()
+                            .surveyId(survey.getSurveyId())
+                            .title(survey.getTitle())
+                            .periodicCycle(survey.getPeriodicCycle())
+                            .surveyCode(survey.getSurveyCode())
+                            .divisionId(survey.getDivision() != null ? survey.getDivision().getDivisionId() : null)
+                            .divisionDescription(survey.getDivision() != null ? survey.getDivision().getDescription() : null)
+                            .enquiryTypeId(survey.getEnquiryType() != null ? survey.getEnquiryType().getEnquiryTypeId() : null)
+                            .enquiryTypeDescription(survey.getEnquiryType() != null ? survey.getEnquiryType().getDescription() : null)
+                            .frequencyTypeId(survey.getFrequencyType() != null ? survey.getFrequencyType().getFrequencyTypeId() : null)
+                            .frequencyTypeDescription(survey.getFrequencyType() != null ? survey.getFrequencyType().getDescription() : null)
+                            .seasonalityFactorId(survey.getSeasonalityFactor() != null ? survey.getSeasonalityFactor().getSeasonalityFactorId() : null)
+                            .seasonalityFactorDescription(survey.getSeasonalityFactor() != null ? survey.getSeasonalityFactor().getDescription() : null)
+                            .surveyDuration(survey.getSurveyDuration())
+                            .ruralSamplingFrame(survey.getRuralSamplingFrame())
+                            .urbanSamplingFrame(survey.getUrbanSamplingFrame())
+                            .samplingSize(survey.getSamplingSize())
+                            .surveyObjective(survey.getSurveyObjective())
+                            .remarks(survey.getRemarks())
+                            .statusId(survey.getStatus() != null ? survey.getStatus().getStatusId() : null)
+                            .statusDescription(survey.getStatus() != null ? survey.getStatus().getDescription() : null)
+                            .isActive(survey.isActive())
+                            .createdBy(survey.getCreatedBy())
+                            .build()
+            ).collect(Collectors.toList());
+
+            logger.info("Survey details fetched and mapped successfully.");
 
             return ResponseUtils.createPageableSuccessResponse(
-                    surveyPage.getContent(),
+                    responseList,
                     surveyPage.getTotalElements(),
                     surveyPage.getTotalPages(),
                     pageable.getPageNumber() + 1,
@@ -273,18 +297,51 @@ public class SurveyServiceImpl implements SurveyService {
         }
     }
 
+    @Transactional(readOnly = true)
     @Override
-    public ApiResponseWithPageable<List<SurveyDetails>> getAllSurveyDetails(GetSurveyReq request) {
-        logger.info("Fetching all survey details with pagination");
+    public ApiResponseWithPageable<List<SurveyResp>> getAllSurveyDetails(GetSurveyReq request) {
+        logger.info("Fetching all survey details with pagination and DTO mapping");
 
         try {
             Pageable pageable = helperUtils.getPageable(request.getPage(), request.getLimit());
             Page<SurveyDetails> surveyPage = surveyDetailsRepo.findAll(pageable);
 
-            logger.info("Survey details fetched successfully");
+            if (surveyPage.getContent().isEmpty()) {
+                throw new SDDException(false, "No survey details found");
+            }
+
+            // Map SurveyDetails entities to SurveyResp DTOs
+            List<SurveyResp> responseList = surveyPage.getContent().stream().map(survey ->
+                    SurveyResp.builder()
+                            .surveyId(survey.getSurveyId())
+                            .title(survey.getTitle())
+                            .periodicCycle(survey.getPeriodicCycle())
+                            .surveyCode(survey.getSurveyCode())
+                            .divisionId(survey.getDivision() != null ? survey.getDivision().getDivisionId() : null)
+                            .divisionDescription(survey.getDivision() != null ? survey.getDivision().getDescription() : null)
+                            .enquiryTypeId(survey.getEnquiryType() != null ? survey.getEnquiryType().getEnquiryTypeId() : null)
+                            .enquiryTypeDescription(survey.getEnquiryType() != null ? survey.getEnquiryType().getDescription() : null)
+                            .frequencyTypeId(survey.getFrequencyType() != null ? survey.getFrequencyType().getFrequencyTypeId() : null)
+                            .frequencyTypeDescription(survey.getFrequencyType() != null ? survey.getFrequencyType().getDescription() : null)
+                            .seasonalityFactorId(survey.getSeasonalityFactor() != null ? survey.getSeasonalityFactor().getSeasonalityFactorId() : null)
+                            .seasonalityFactorDescription(survey.getSeasonalityFactor() != null ? survey.getSeasonalityFactor().getDescription() : null)
+                            .surveyDuration(survey.getSurveyDuration())
+                            .ruralSamplingFrame(survey.getRuralSamplingFrame())
+                            .urbanSamplingFrame(survey.getUrbanSamplingFrame())
+                            .samplingSize(survey.getSamplingSize())
+                            .surveyObjective(survey.getSurveyObjective())
+                            .remarks(survey.getRemarks())
+                            .statusId(survey.getStatus() != null ? survey.getStatus().getStatusId() : null)
+                            .statusDescription(survey.getStatus() != null ? survey.getStatus().getDescription() : null)
+                            .isActive(survey.isActive())
+                            .createdBy(survey.getCreatedBy())
+                            .build()
+            ).collect(Collectors.toList());
+
+            logger.info("All survey details fetched and mapped successfully");
 
             return ResponseUtils.createPageableSuccessResponse(
-                    surveyPage.getContent(),
+                    responseList,
                     surveyPage.getTotalElements(),
                     surveyPage.getTotalPages(),
                     pageable.getPageNumber() + 1,
@@ -298,7 +355,6 @@ public class SurveyServiceImpl implements SurveyService {
             throw new SDDException(false, "Unexpected error during fetching survey details");
         }
     }
-
 
 
     //**********************TEMPLATE DETAILS******************************/
@@ -406,10 +462,11 @@ public class SurveyServiceImpl implements SurveyService {
         }
     }
 
+    @Transactional(readOnly = true)
     @Override
-    public ApiResponseWithPageable<List<TemplateDetails>> getTemplateDetailsById(GetTemplateReq request) {
-        logger.info("Fetching template details for templateId: {} or userId: {} with pagination",
-                request.getTemplateId(), request.getUserId());
+    public ApiResponseWithPageable<List<TemplateResp>> getTemplateDetailsById(GetTemplateReq request) {
+        logger.info("Fetching template details with DTO mapping for templateId: {}, userId: {}, or surveyId: {} with pagination",
+                request.getTemplateId(), request.getUserId(), request.getSurveyId());
 
         try {
             Pageable pageable = helperUtils.getPageable(request.getPage(), request.getLimit());
@@ -423,16 +480,34 @@ public class SurveyServiceImpl implements SurveyService {
 
             } else if (request.getUserId() != null) {
                 templatePage = templateDetailsRepo.findByCreatedBy(request.getUserId(), pageable);
+            } else if (request.getSurveyId() != null) {
+                templatePage = templateDetailsRepo.findBySurvey_SurveyId(request.getSurveyId(), pageable);
             } else {
-                throw new SDDException(false, "Either templateId or userId must be provided");
+                throw new SDDException(false, "Either templateId, userId, or surveyId must be provided");
             }
+
             if (templatePage.getContent().isEmpty()) {
                 throw new SDDException(false, "No templates found");
             }
-            logger.info("Template details fetched successfully.");
+
+            // Map TemplateDetails entities to TemplateResp DTOs
+            List<TemplateResp> responseList = templatePage.getContent().stream().map(template ->
+                    TemplateResp.builder()
+                            .templateId(template.getTemplateId())
+                            .templateName(template.getTemplateName())
+                            .templateType(template.getTemplateType())
+                            .surveyId(template.getSurvey() != null ? template.getSurvey().getSurveyId() : null)
+                            .statusId(template.getStatus() != null ? template.getStatus().getStatusId() : null)
+                            .statusDescription(template.getStatus() != null ? template.getStatus().getDescription() : null)
+                            .isActive(template.isActive())
+                            .createdBy(template.getCreatedBy())
+                            .build()
+            ).collect(Collectors.toList());
+
+            logger.info("Template details fetched and mapped successfully.");
 
             return ResponseUtils.createPageableSuccessResponse(
-                    templatePage.getContent(),
+                    responseList,
                     templatePage.getTotalElements(),
                     templatePage.getTotalPages(),
                     pageable.getPageNumber() + 1,
@@ -446,18 +521,37 @@ public class SurveyServiceImpl implements SurveyService {
         }
     }
 
+    @Transactional(readOnly = true)
     @Override
-    public ApiResponseWithPageable<List<TemplateDetails>> getAllTemplateDetails(GetTemplateReq request) {
-        logger.info("Fetching all template details with pagination");
+    public ApiResponseWithPageable<List<TemplateResp>> getAllTemplateDetails(GetTemplateReq request) {
+        logger.info("Fetching all template details with pagination and DTO mapping");
 
         try {
             Pageable pageable = helperUtils.getPageable(request.getPage(), request.getLimit());
             Page<TemplateDetails> templatePage = templateDetailsRepo.findAll(pageable);
 
-            logger.info("Template details fetched successfully");
+            if (templatePage.getContent().isEmpty()) {
+                throw new SDDException(false, "No template details found");
+            }
+
+            // Map TemplateDetails entities to TemplateResp DTOs
+            List<TemplateResp> responseList = templatePage.getContent().stream().map(template ->
+                    TemplateResp.builder()
+                            .templateId(template.getTemplateId())
+                            .templateName(template.getTemplateName())
+                            .templateType(template.getTemplateType())
+                            .surveyId(template.getSurvey() != null ? template.getSurvey().getSurveyId() : null)
+                            .statusId(template.getStatus() != null ? template.getStatus().getStatusId() : null)
+                            .statusDescription(template.getStatus() != null ? template.getStatus().getDescription() : null)
+                            .isActive(template.isActive())
+                            .createdBy(template.getCreatedBy())
+                            .build()
+            ).collect(Collectors.toList());
+
+            logger.info("All template details fetched and mapped successfully");
 
             return ResponseUtils.createPageableSuccessResponse(
-                    templatePage.getContent(),
+                    responseList,
                     templatePage.getTotalElements(),
                     templatePage.getTotalPages(),
                     pageable.getPageNumber() + 1,
@@ -471,7 +565,6 @@ public class SurveyServiceImpl implements SurveyService {
             throw new SDDException(false, "Unexpected error during fetching template details");
         }
     }
-
 
     //**********************SCHEDULE DETAILS******************************/
 
@@ -594,10 +687,11 @@ public class SurveyServiceImpl implements SurveyService {
         }
     }
 
+    @Transactional(readOnly = true)
     @Override
-    public ApiResponseWithPageable<List<ScheduleDetails>> getScheduleDetailsByIdOrUser(GetScheduleReq request) {
-        logger.info("Fetching schedule details for scheduleId: {} or userId: {} with pagination",
-                request.getScheduleId(), request.getUserId());
+    public ApiResponseWithPageable<List<ScheduleResp>> getScheduleDetailsByIdOrUser(GetScheduleReq request) {
+        logger.info("Fetching schedule details with DTO mapping for scheduleId: {}, userId: {}, or surveyId: {} with pagination",
+                request.getScheduleId(), request.getUserId(), request.getSurveyId());
 
         try {
             Pageable pageable = helperUtils.getPageable(request.getPage(), request.getLimit());
@@ -616,18 +710,37 @@ public class SurveyServiceImpl implements SurveyService {
                 // 2. If userId is provided, fetch paginated list for that user
                 schedulePage = scheduleDetailsRepo.findByCreatedBy(request.getUserId(), pageable);
 
+            } else if (request.getSurveyId() != null) {
+                // 3. If surveyId is provided, fetch paginated list for that survey
+                schedulePage = scheduleDetailsRepo.findBySurvey_SurveyId(request.getSurveyId(), pageable);
             } else {
-                throw new SDDException(false, "Either scheduleId or userId must be provided");
+                throw new SDDException(false, "Either scheduleId, userId, or surveyId must be provided");
             }
 
             if (schedulePage.getContent().isEmpty()) {
                 throw new SDDException(false, "No schedule details found");
             }
 
-            logger.info("Schedule details fetched successfully");
+            // Map ScheduleDetails entities to ScheduleResp DTOs
+            List<ScheduleResp> responseList = schedulePage.getContent().stream().map(schedule ->
+                    ScheduleResp.builder()
+                            .scheduleId(schedule.getScheduleId())
+                            .surveyId(schedule.getSurvey() != null ? schedule.getSurvey().getSurveyId() : null)
+                            .scheduleTypeId(schedule.getScheduleType() != null ? schedule.getScheduleType().getScheduleTypeId() : null)
+                            .scheduleTypeDescription(schedule.getScheduleType() != null ? schedule.getScheduleType().getDescription() : null)
+                            .scheduleAttributesId(schedule.getScheduleAttributes() != null ? schedule.getScheduleAttributes().getScheduleAttributesId() : null)
+                            .scheduleAttributesDescription(schedule.getScheduleAttributes() != null ? schedule.getScheduleAttributes().getDescription() : null)
+                            .statusId(schedule.getStatus() != null ? schedule.getStatus().getStatusId() : null)
+                            .statusDescription(schedule.getStatus() != null ? schedule.getStatus().getDescription() : null)
+                            .isActive(schedule.isActive())
+                            .createdBy(schedule.getCreatedBy())
+                            .build()
+            ).collect(Collectors.toList());
+
+            logger.info("Schedule details fetched and mapped successfully");
 
             return ResponseUtils.createPageableSuccessResponse(
-                    schedulePage.getContent(),
+                    responseList,
                     schedulePage.getTotalElements(),
                     schedulePage.getTotalPages(),
                     pageable.getPageNumber() + 1,
@@ -643,18 +756,39 @@ public class SurveyServiceImpl implements SurveyService {
     }
 
 
+    @Transactional(readOnly = true)
     @Override
-    public ApiResponseWithPageable<List<ScheduleDetails>> getAllScheduleDetails(GetScheduleReq request) {
-        logger.info("Fetching all schedule details with pagination");
+    public ApiResponseWithPageable<List<ScheduleResp>> getAllScheduleDetails(GetScheduleReq request) {
+        logger.info("Fetching all schedule details with pagination and DTO mapping");
 
         try {
             Pageable pageable = helperUtils.getPageable(request.getPage(), request.getLimit());
             Page<ScheduleDetails> schedulePage = scheduleDetailsRepo.findAll(pageable);
 
-            logger.info("Template schedule fetched successfully");
+            if (schedulePage.getContent().isEmpty()) {
+                throw new SDDException(false, "No schedule details found");
+            }
+
+            // Map ScheduleDetails entities to ScheduleResp DTOs
+            List<ScheduleResp> responseList = schedulePage.getContent().stream().map(schedule ->
+                    ScheduleResp.builder()
+                            .scheduleId(schedule.getScheduleId())
+                            .surveyId(schedule.getSurvey() != null ? schedule.getSurvey().getSurveyId() : null)
+                            .scheduleTypeId(schedule.getScheduleType() != null ? schedule.getScheduleType().getScheduleTypeId() : null)
+                            .scheduleTypeDescription(schedule.getScheduleType() != null ? schedule.getScheduleType().getDescription() : null)
+                            .scheduleAttributesId(schedule.getScheduleAttributes() != null ? schedule.getScheduleAttributes().getScheduleAttributesId() : null)
+                            .scheduleAttributesDescription(schedule.getScheduleAttributes() != null ? schedule.getScheduleAttributes().getDescription() : null)
+                            .statusId(schedule.getStatus() != null ? schedule.getStatus().getStatusId() : null)
+                            .statusDescription(schedule.getStatus() != null ? schedule.getStatus().getDescription() : null)
+                            .isActive(schedule.isActive())
+                            .createdBy(schedule.getCreatedBy())
+                            .build()
+            ).collect(Collectors.toList());
+
+            logger.info("All schedule details fetched and mapped successfully");
 
             return ResponseUtils.createPageableSuccessResponse(
-                    schedulePage.getContent(),
+                    responseList,
                     schedulePage.getTotalElements(),
                     schedulePage.getTotalPages(),
                     pageable.getPageNumber() + 1,
@@ -803,7 +937,9 @@ public class SurveyServiceImpl implements SurveyService {
 
             } else if (request.getUserId() != null) {
                 blockPage = blockDetailsRepo.findByCreatedBy(request.getUserId(), pageable);
-            } else {
+            } else if (request.getSurveyId() != null){
+                blockPage = blockDetailsRepo.findBySurvey_SurveyId(request.getSurveyId(), pageable);
+            }else {
                 throw new SDDException(false, "Either blockId or userId must be provided");
             }
 
@@ -1145,7 +1281,9 @@ public class SurveyServiceImpl implements SurveyService {
 
             } else if (request.getUserId() != null) {
                 questionPage = questionDetailsRepo.findByCreatedBy(request.getUserId(), pageable);
-            } else {
+            } else if (request.getSurveyId() != null){
+                questionPage = questionDetailsRepo.findBySurvey_SurveyId(request.getSurveyId(), pageable);
+            }else {
                 throw new SDDException(false, "Either questionId or userId must be provided");
             }
 
@@ -1208,18 +1346,60 @@ public class SurveyServiceImpl implements SurveyService {
         }
     }
 
+    @Transactional(readOnly = true)
     @Override
-    public ApiResponseWithPageable<List<QuestionDetails>> getAllQuestionDetails(GetQuestionReq request) {
-        logger.info("Fetching all question with pagination");
+    public ApiResponseWithPageable<List<QuestionResp>> getAllQuestionDetails(GetQuestionReq request) {
+        logger.info("Fetching all question details with conditions & validations and pagination");
 
         try {
             Pageable pageable = helperUtils.getPageable(request.getPage(), request.getLimit());
             Page<QuestionDetails> questionPage = questionDetailsRepo.findAll(pageable);
 
-            logger.info(" question fetched successfully");
+            if (questionPage.getContent().isEmpty()) {
+                throw new SDDException(false, "No question details found");
+            }
+
+            // Map QuestionDetails entities to QuestionResp matching your nested structure
+            List<QuestionResp> responseList = questionPage.getContent().stream().map(question -> {
+
+                // Map skip conditions
+                List<SkipConditionResp> skipConditions = question.getSkipConditions() != null ?
+                        question.getSkipConditions().stream().map(cond -> SkipConditionResp.builder()
+                                .skipConditionId(cond.getSkipConditionId())
+                                .questionId(cond.getTargetQuestion() != null ? cond.getTargetQuestion().getQuestionId() : null)
+                                .condition(cond.getCondition())
+                                .value(cond.getValue())
+                                .build()).collect(Collectors.toList()) : Collections.emptyList();
+
+                // Map validations
+                List<QuestionValidationResp> validations = question.getValidations() != null ?
+                        question.getValidations().stream().map(val -> QuestionValidationResp.builder()
+                                .validationId(val.getValidationId())
+                                .validationType(val.getValidationType())
+                                .severityCheck(val.getSeverityCheck())
+                                .value(val.getValue())
+                                .errorMsg(val.getErrorMsg())
+                                .build()).collect(Collectors.toList()) : Collections.emptyList();
+
+                return QuestionResp.builder()
+                        .questionId(question.getQuestionId())
+                        .surveyId(question.getSurvey() != null ? question.getSurvey().getSurveyId() : null)
+                        .blockId(question.getBlock() != null ? question.getBlock().getBlockId() : null)
+                        .questionNumber(question.getQuestionNumber())
+                        .fieldInstructions(question.getFieldInstructions())
+                        .questionHeading(question.getQuestionHeading())
+                        .dataFormate(question.getDataFormate())
+                        .dropDownValue(question.getDropDownValue())
+                        .isMandatory(question.isMandatory())
+                        .skipConditionReq(skipConditions)
+                        .questionValidationReq(validations)
+                        .build();
+            }).collect(Collectors.toList());
+
+            logger.info("All question details with conditions and validations mapped and fetched successfully");
 
             return ResponseUtils.createPageableSuccessResponse(
-                    questionPage.getContent(),
+                    responseList,
                     questionPage.getTotalElements(),
                     questionPage.getTotalPages(),
                     pageable.getPageNumber() + 1,
@@ -1230,7 +1410,7 @@ public class SurveyServiceImpl implements SurveyService {
             throw e;
         } catch (Exception e) {
             logger.error("Error while fetching all question details", e);
-            throw new SDDException(false, "Unexpected error during question details");
+            throw new SDDException(false, "Unexpected error during all question details retrieval");
         }
     }
 

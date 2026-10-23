@@ -13,24 +13,24 @@ public interface SurveyService {
     ApiResponse<DefaultResponse> createSurveyDetails(Long userId, CreateSurveyReq request);
     ApiResponse<DefaultResponse> updateSurveyDetails(Long userId, UpdateSurveyReq request);
     ApiResponse<DefaultResponse> updateSurveyStatus(Long userId, SurveyStatusReq request);
-    ApiResponseWithPageable<List<SurveyDetails>> getSurveyDetailsById(GetSurveyReq request);
-    ApiResponseWithPageable<List<SurveyDetails>> getAllSurveyDetails(GetSurveyReq request);
+    ApiResponseWithPageable<List<SurveyResp>> getSurveyDetailsById(GetSurveyReq request);
+    ApiResponseWithPageable<List<SurveyResp>> getAllSurveyDetails(GetSurveyReq request);
 
     //**********************TEMPLATE DETAILS******************************/
 
     ApiResponse<DefaultResponse> createTemplateDetails(Long userId, CreateTemplateReq request);
     ApiResponse<DefaultResponse> updateTemplateDetails(Long userId, UpdateTemplateReq request);
     ApiResponse<DefaultResponse> updateTemplateStatus(Long userId, TemplateStatusReq request);
-    ApiResponseWithPageable<List<TemplateDetails>> getTemplateDetailsById(GetTemplateReq request);
-    ApiResponseWithPageable<List<TemplateDetails>> getAllTemplateDetails(GetTemplateReq request);
+    ApiResponseWithPageable<List<TemplateResp>> getTemplateDetailsById(GetTemplateReq request);
+    ApiResponseWithPageable<List<TemplateResp>> getAllTemplateDetails(GetTemplateReq request);
 
     //**********************SCHEDULE DETAILS******************************/
 
     ApiResponse<DefaultResponse> createScheduleDetails(Long userId, CreateScheduleReq request);
     ApiResponse<DefaultResponse> updateScheduleDetails(Long userId, UpdateScheduleReq request);
     ApiResponse<DefaultResponse> updateScheduleStatus(Long userId, ScheduleStatusReq request);
-    ApiResponseWithPageable<List<ScheduleDetails>> getScheduleDetailsByIdOrUser(GetScheduleReq request);
-    ApiResponseWithPageable<List<ScheduleDetails>> getAllScheduleDetails(GetScheduleReq request);
+    ApiResponseWithPageable<List<ScheduleResp>> getScheduleDetailsByIdOrUser(GetScheduleReq request);
+    ApiResponseWithPageable<List<ScheduleResp>> getAllScheduleDetails(GetScheduleReq request);
 
     //**********************BLOCK DETAILS******************************/
 
@@ -46,7 +46,7 @@ public interface SurveyService {
     ApiResponse<DefaultResponse> updateQuestionDetails(Long userId, UpdateQuestionReq request);
     ApiResponse<DefaultResponse> updateQuestionStatus(Long userId, QuestionStatusReq request);
     ApiResponseWithPageable<List<QuestionResp>> getQuestionDetailsByIdOrUser(GetQuestionReq request);
-    ApiResponseWithPageable<List<QuestionDetails>> getAllQuestionDetails(GetQuestionReq request);
+    ApiResponseWithPageable<List<QuestionResp>> getAllQuestionDetails(GetQuestionReq request);
 
 
 }

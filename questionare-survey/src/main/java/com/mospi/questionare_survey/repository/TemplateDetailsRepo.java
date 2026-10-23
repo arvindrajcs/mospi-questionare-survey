@@ -13,4 +13,4 @@ import java.util.Optional;
 public interface TemplateDetailsRepo extends JpaRepository<TemplateDetails, Long> {
     Optional<TemplateDetails> findByTemplateId(Long templateId);
     Page<TemplateDetails> findByCreatedBy(Long userId, Pageable pageable);
-}
+    Page<TemplateDetails> findBySurvey_SurveyId(Long surveyId, Pageable pageable);}

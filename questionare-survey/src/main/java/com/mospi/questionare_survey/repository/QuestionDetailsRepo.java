@@ -10,4 +10,8 @@ import org.springframework.stereotype.Repository;
 public interface QuestionDetailsRepo extends JpaRepository<QuestionDetails, Long> {
 
     Page<QuestionDetails> findByCreatedBy(Long userId, Pageable pageable);
+    Page<QuestionDetails> findBySurvey_SurveyId(Long surveyId, Pageable pageable);
+    Page<QuestionDetails> findByBlock_BlockId(Long blockId, Pageable pageable);
+
+
 }

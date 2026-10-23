@@ -11,6 +11,7 @@ import lombok.Setter;
 @AllArgsConstructor
 public class GetScheduleReq {
     private Long scheduleId;
+    private Long surveyId;
     private Long userId;
     private Long page;
     private Long limit;
