@@ -88,7 +88,7 @@ public class SurveyServiceImpl implements SurveyService {
 
     @Transactional(rollbackFor = Exception.class)
     @Override
-    public ApiResponse<DefaultResponse> createSurveyDetails(Long userId, CreateSurveyReq request) {
+    public ApiResponse<SurveyCreateResp> createSurveyDetails(Long userId, CreateSurveyReq request) {
         logger.info("Starting survey design creation for user: {}", userId);
 
         try {
@@ -135,9 +135,10 @@ public class SurveyServiceImpl implements SurveyService {
 
             logger.info("Survey design created successfully with code: {}", request.getSurveyCode());
 
-            DefaultResponse defaultResponse = new DefaultResponse();
+            SurveyCreateResp defaultResponse = new SurveyCreateResp();
             defaultResponse.setMsg("Survey design created successfully");
-            return ResponseUtils.createSuccessResponse(defaultResponse, new TypeReference<DefaultResponse>() {});
+            defaultResponse.setSurveyId(survey.getSurveyId());
+            return ResponseUtils.createSuccessResponse(defaultResponse, new TypeReference<SurveyCreateResp>() {});
 
         } catch (SDDException e) {
             throw e;
@@ -149,7 +150,7 @@ public class SurveyServiceImpl implements SurveyService {
 
     @Transactional(rollbackFor = Exception.class)
     @Override
-    public ApiResponse<DefaultResponse> updateSurveyDetails(Long userId, UpdateSurveyReq request) {
+    public ApiResponse<SurveyCreateResp> updateSurveyDetails(Long userId, UpdateSurveyReq request) {
         logger.info("Starting survey details update for ID: {} by user: {}", request.getSurveyId(), userId);
 
         try {
@@ -190,9 +191,10 @@ public class SurveyServiceImpl implements SurveyService {
 
             logger.info("Survey details updated successfully for ID: {}", request.getSurveyId());
 
-            DefaultResponse defaultResponse = new DefaultResponse();
+            SurveyCreateResp defaultResponse = new SurveyCreateResp();
             defaultResponse.setMsg("Survey details updated successfully");
-            return ResponseUtils.createSuccessResponse(defaultResponse, new TypeReference<DefaultResponse>() {});
+            defaultResponse.setSurveyId(survey.getSurveyId());
+            return ResponseUtils.createSuccessResponse(defaultResponse, new TypeReference<SurveyCreateResp>() {});
 
         } catch (SDDException e) {
             throw e;
@@ -204,7 +206,7 @@ public class SurveyServiceImpl implements SurveyService {
 
     @Transactional(rollbackFor = Exception.class)
     @Override
-    public ApiResponse<DefaultResponse> updateSurveyStatus(Long userId, SurveyStatusReq request) {
+    public ApiResponse<SurveyCreateResp> updateSurveyStatus(Long userId, SurveyStatusReq request) {
         logger.info("Starting survey status update for ID: {} by user: {}", request.getSurveyId(), userId);
 
         try {
@@ -218,9 +220,10 @@ public class SurveyServiceImpl implements SurveyService {
 
             logger.info("Survey status updated successfully for ID: {}", request.getSurveyId());
 
-            DefaultResponse defaultResponse = new DefaultResponse();
+            SurveyCreateResp defaultResponse = new SurveyCreateResp();
             defaultResponse.setMsg("Survey status updated successfully");
-            return ResponseUtils.createSuccessResponse(defaultResponse, new TypeReference<DefaultResponse>() {});
+            defaultResponse.setSurveyId(survey.getSurveyId());
+            return ResponseUtils.createSuccessResponse(defaultResponse, new TypeReference<SurveyCreateResp>() {});
 
         } catch (SDDException e) {
             throw e;
@@ -581,7 +584,7 @@ public class SurveyServiceImpl implements SurveyService {
 
     @Transactional(rollbackFor = Exception.class)
     @Override
-    public ApiResponse<DefaultResponse> createScheduleDetails(Long userId, CreateScheduleReq request) {
+    public ApiResponse<ScheduleCreationResp> createScheduleDetails(Long userId, CreateScheduleReq request) {
         logger.info("Starting schedule details creation for survey ID: {} by user: {}", request.getSurveyId(), userId);
 
         try {
@@ -617,9 +620,10 @@ public class SurveyServiceImpl implements SurveyService {
             logger.info("Schedule details created successfully for survey ID: {}", request.getSurveyId());
 
             // 5. Prepare success response
-            DefaultResponse defaultResponse = new DefaultResponse();
+            ScheduleCreationResp defaultResponse = new ScheduleCreationResp();
             defaultResponse.setMsg("Schedule details created successfully");
-            return ResponseUtils.createSuccessResponse(defaultResponse, new TypeReference<DefaultResponse>() {});
+            defaultResponse.setScheduleId(scheduleDetails.getScheduleId());
+            return ResponseUtils.createSuccessResponse(defaultResponse, new TypeReference<ScheduleCreationResp>() {});
 
         } catch (SDDException e) {
             throw e;
@@ -632,7 +636,7 @@ public class SurveyServiceImpl implements SurveyService {
 
     @Transactional(rollbackFor = Exception.class)
     @Override
-    public ApiResponse<DefaultResponse> updateScheduleDetails(Long userId, UpdateScheduleReq request) {
+    public ApiResponse<ScheduleCreationResp> updateScheduleDetails(Long userId, UpdateScheduleReq request) {
         logger.info("Starting schedule details update for ID: {} by user: {}", request.getScheduleId(), userId);
 
         try {
@@ -662,9 +666,10 @@ public class SurveyServiceImpl implements SurveyService {
 
             logger.info("Schedule details updated successfully for ID: {}", request.getScheduleId());
 
-            DefaultResponse defaultResponse = new DefaultResponse();
+            ScheduleCreationResp defaultResponse = new ScheduleCreationResp();
             defaultResponse.setMsg("Schedule details updated successfully");
-            return ResponseUtils.createSuccessResponse(defaultResponse, new TypeReference<DefaultResponse>() {});
+            defaultResponse.setScheduleId(scheduleDetails.getScheduleId());
+            return ResponseUtils.createSuccessResponse(defaultResponse, new TypeReference<ScheduleCreationResp>() {});
 
         } catch (SDDException e) {
             throw e;
@@ -676,7 +681,7 @@ public class SurveyServiceImpl implements SurveyService {
 
     @Transactional(rollbackFor = Exception.class)
     @Override
-    public ApiResponse<DefaultResponse> updateScheduleStatus(Long userId, ScheduleStatusReq request) {
+    public ApiResponse<ScheduleCreationResp> updateScheduleStatus(Long userId, ScheduleStatusReq request) {
         logger.info("Starting schedule status update for ID: {} by user: {}", request.getScheduleId(), userId);
 
         try {
@@ -690,9 +695,10 @@ public class SurveyServiceImpl implements SurveyService {
 
             logger.info("Schedule status updated successfully for ID: {}", request.getScheduleId());
 
-            DefaultResponse defaultResponse = new DefaultResponse();
+            ScheduleCreationResp defaultResponse = new ScheduleCreationResp();
             defaultResponse.setMsg("Schedule status updated successfully");
-            return ResponseUtils.createSuccessResponse(defaultResponse, new TypeReference<DefaultResponse>() {});
+            defaultResponse.setScheduleId(scheduleDetails.getScheduleId());
+            return ResponseUtils.createSuccessResponse(defaultResponse, new TypeReference<ScheduleCreationResp>() {});
 
         } catch (SDDException e) {
             throw e;
@@ -1079,6 +1085,7 @@ public class SurveyServiceImpl implements SurveyService {
                     .dataFormate(request.getDataFormate())
                     .dropDownValue(request.getDropDownValue())
                     .isMandatory(request.isMandatory())
+                    .questionCondition(request.getQuestionCondition())
                     .status(masStatusRepo.getReferenceById(1L))
                     .isActive(true)
                     .createdBy(userId)
@@ -1180,6 +1187,7 @@ public class SurveyServiceImpl implements SurveyService {
             questionDetails.setDataFormate(request.getDataFormate());
             questionDetails.setDropDownValue(request.getDropDownValue());
             questionDetails.setMandatory(request.isMandatory());
+            questionDetails.setQuestionCondition(request.getQuestionCondition());
             questionDetails.setUpdatedBy(userId);
 
             questionDetailsRepo.save(questionDetails);

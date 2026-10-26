@@ -21,6 +21,7 @@ public class UpdateQuestionReq {
     private String dataFormate;
     private String dropDownValue;
     private boolean isMandatory;
+    private String questionCondition;
     private ArrayList<SkipConditionReq> skipConditionReq;
     private ArrayList<QuestionValidationReq> questionValidationReq;
 }

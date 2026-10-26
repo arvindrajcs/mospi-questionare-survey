@@ -417,7 +417,7 @@ public class MasterServiceImpl implements MasterService {
     public ApiResponseWithPageable<List<MasScheduleType>> getAllScheduleType(GetScheduleTypeReq request) {
         try {
             Pageable pageable = helperUtill.getPageable(request.getPage(), request.getLimit());
-            Page<MasScheduleType> scheduleTypePage = masScheduleTypeRepo.findAll(pageable);
+            Page<MasScheduleType> scheduleTypePage = masScheduleTypeRepo.findAllByOrderByScheduleTypeIdAsc(pageable);
             logger.info("schedule Type Details fetching successfully ");
             return ResponseUtils.createPageableSuccessResponse(
                     scheduleTypePage.getContent(),

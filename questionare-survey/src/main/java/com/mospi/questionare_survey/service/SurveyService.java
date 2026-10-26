@@ -10,9 +10,9 @@ public interface SurveyService {
 
     //**********************SURVEY DETAILS******************************/
 
-    ApiResponse<DefaultResponse> createSurveyDetails(Long userId, CreateSurveyReq request);
-    ApiResponse<DefaultResponse> updateSurveyDetails(Long userId, UpdateSurveyReq request);
-    ApiResponse<DefaultResponse> updateSurveyStatus(Long userId, SurveyStatusReq request);
+    ApiResponse<SurveyCreateResp> createSurveyDetails(Long userId, CreateSurveyReq request);
+    ApiResponse<SurveyCreateResp> updateSurveyDetails(Long userId, UpdateSurveyReq request);
+    ApiResponse<SurveyCreateResp> updateSurveyStatus(Long userId, SurveyStatusReq request);
     ApiResponseWithPageable<List<SurveyResp>> getSurveyDetailsById(GetSurveyReq request);
     ApiResponseWithPageable<List<SurveyResp>> getAllSurveyDetails(GetSurveyReq request);
 
@@ -26,9 +26,9 @@ public interface SurveyService {
 
     //**********************SCHEDULE DETAILS******************************/
 
-    ApiResponse<DefaultResponse> createScheduleDetails(Long userId, CreateScheduleReq request);
-    ApiResponse<DefaultResponse> updateScheduleDetails(Long userId, UpdateScheduleReq request);
-    ApiResponse<DefaultResponse> updateScheduleStatus(Long userId, ScheduleStatusReq request);
+    ApiResponse<ScheduleCreationResp> createScheduleDetails(Long userId, CreateScheduleReq request);
+    ApiResponse<ScheduleCreationResp> updateScheduleDetails(Long userId, UpdateScheduleReq request);
+    ApiResponse<ScheduleCreationResp> updateScheduleStatus(Long userId, ScheduleStatusReq request);
     ApiResponseWithPageable<List<ScheduleResp>> getScheduleDetailsByIdOrUser(GetScheduleReq request);
     ApiResponseWithPageable<List<ScheduleResp>> getAllScheduleDetails(GetScheduleReq request);
 

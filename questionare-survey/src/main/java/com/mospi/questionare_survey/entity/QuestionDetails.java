@@ -60,6 +60,9 @@ public class QuestionDetails {
     @Column(name = "is_mandatory", nullable = false)
     private boolean isMandatory = true;
 
+    @Column(name = "question_condition")
+    private String questionCondition;
+
     // --- ADD THESE TWO MAPPINGS ---
     @ToString.Exclude
     @Builder.Default

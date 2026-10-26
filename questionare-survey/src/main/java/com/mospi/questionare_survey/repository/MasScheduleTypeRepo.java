@@ -1,6 +1,8 @@
 package com.mospi.questionare_survey.repository;
 
 import com.mospi.questionare_survey.entity.MasScheduleType;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -12,6 +14,8 @@ public interface MasScheduleTypeRepo extends JpaRepository<MasScheduleType, Long
 
     // Description se schedule type find karne ke liye
     Optional<MasScheduleType> findByDescription(String description);
+
+    Page<MasScheduleType> findAllByOrderByScheduleTypeIdAsc(Pageable pageable);
 
     // Saare active schedule types fetch karne ke liye
     List<MasScheduleType> findByIsActiveTrue();

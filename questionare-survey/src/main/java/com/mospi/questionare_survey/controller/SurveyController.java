@@ -33,14 +33,14 @@ public class SurveyController {
 
     @Operation(summary = "This API is used to capture basic survey details")
     @PostMapping("/save/survey-details")
-    public ResponseEntity<ApiResponse<DefaultResponse>> createSurveyDetails(@RequestHeader("userId") Long userId, @RequestBody CreateSurveyReq request) {
+    public ResponseEntity<ApiResponse<SurveyCreateResp>> createSurveyDetails(@RequestHeader("userId") Long userId, @RequestBody CreateSurveyReq request) {
         logger.info("trying to call createSurveyDetails API");
         return new ResponseEntity<>(surveyService.createSurveyDetails(userId, request), HttpStatus.OK);
     }
 
     @Operation(summary = "This API is used to update basic survey details")
     @PostMapping("/update/survey-details")
-    public ResponseEntity<ApiResponse<DefaultResponse>> updateSurveyDetails(
+    public ResponseEntity<ApiResponse<SurveyCreateResp>> updateSurveyDetails(
             @RequestHeader("userId") Long userId,
             @RequestBody UpdateSurveyReq request) {
         logger.info("trying to call updateSurveyDetails API for ID: {}", request.getSurveyId());
@@ -49,7 +49,7 @@ public class SurveyController {
 
     @Operation(summary = "This API is used to update survey status (active/inactive)")
     @PostMapping("/update/survey-status")
-    public ResponseEntity<ApiResponse<DefaultResponse>> updateSurveyStatus(
+    public ResponseEntity<ApiResponse<SurveyCreateResp>> updateSurveyStatus(
             @RequestHeader("userId") Long userId,
             @RequestBody SurveyStatusReq request) {
         logger.info("trying to call updateSurveyStatus API for ID: {}", request.getSurveyId());
@@ -117,21 +117,21 @@ public class SurveyController {
 
     @Operation(summary = "This API is used to capture schedule details")
     @PostMapping("/save/schedule-details")
-    public ResponseEntity<ApiResponse<DefaultResponse>> createScheduleDetails(@RequestHeader("userId") Long userId, @RequestBody CreateScheduleReq request) {
+    public ResponseEntity<ApiResponse<ScheduleCreationResp>> createScheduleDetails(@RequestHeader("userId") Long userId, @RequestBody CreateScheduleReq request) {
         logger.info("trying to call createScheduleDetails API");
         return new ResponseEntity<>(surveyService.createScheduleDetails(userId, request), HttpStatus.OK);
     }
 
     @Operation(summary = "This API is used to update survey schedule details")
     @PostMapping("/update/schedule-details")
-    public ResponseEntity<ApiResponse<DefaultResponse>> updateScheduleDetails(@RequestHeader("userId") Long userId, @RequestBody UpdateScheduleReq request) {
+    public ResponseEntity<ApiResponse<ScheduleCreationResp>> updateScheduleDetails(@RequestHeader("userId") Long userId, @RequestBody UpdateScheduleReq request) {
         logger.info("trying to call updateScheduleDetails API for ID: {}", request.getScheduleId());
         return new ResponseEntity<>(surveyService.updateScheduleDetails(userId, request), HttpStatus.OK);
     }
 
     @Operation(summary = "This API is used to update schedule status (active/inactive)")
     @PostMapping("/update/schedule-status")
-    public ResponseEntity<ApiResponse<DefaultResponse>> updateScheduleStatus(@RequestHeader("userId") Long userId, @RequestBody ScheduleStatusReq request) {
+    public ResponseEntity<ApiResponse<ScheduleCreationResp>> updateScheduleStatus(@RequestHeader("userId") Long userId, @RequestBody ScheduleStatusReq request) {
         logger.info("trying to call updateScheduleStatus API for ID: {}", request.getScheduleId());
         return new ResponseEntity<>(surveyService.updateScheduleStatus(userId, request), HttpStatus.OK);
     }
