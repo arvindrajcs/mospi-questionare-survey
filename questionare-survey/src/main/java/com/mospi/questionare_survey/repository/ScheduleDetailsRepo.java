@@ -14,6 +14,4 @@ public interface ScheduleDetailsRepo extends JpaRepository<ScheduleDetails, Long
     Page<ScheduleDetails> findByCreatedBy(Long userId, Pageable pageable);
     Page<ScheduleDetails> findBySurvey_SurveyId(Long surveyId, Pageable pageable);
     List<ScheduleDetails> findAllBySurvey_SurveyId(Long surveyId);
-
-    boolean existsByCreatedByAndStatus_StatusIdIn(Long userId, List<Long> longs);
 }

@@ -12,8 +12,6 @@ public class TemplateResp {
     private String templateName;
     private String templateType;
     private Long surveyId;
-    private Long statusId;
-    private String statusDescription;
     private boolean isActive;
     private Long createdBy;
 }

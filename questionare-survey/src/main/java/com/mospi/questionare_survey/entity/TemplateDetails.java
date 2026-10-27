@@ -39,12 +39,6 @@ public class TemplateDetails {
     private SurveyDetails survey;
 
 
-    // Many surveys belong to one Status
-    @ToString.Exclude
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "status_id", nullable = false)
-    private MasStatus status;
-
     @Builder.Default
     @Column(name = "is_active", nullable = false)
     private boolean isActive = true;

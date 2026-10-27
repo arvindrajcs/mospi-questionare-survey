@@ -14,7 +14,4 @@ public interface BlockDetailsRepo extends JpaRepository<BlockDetails, Long> {
     Page<BlockDetails> findByCreatedBy(Long userId, Pageable pageable);
     Page<BlockDetails> findBySurvey_SurveyId(Long surveyId, Pageable pageable);
     List<BlockDetails> findAllBySurvey_SurveyId(Long surveyId);
-
-
-    boolean existsByCreatedByAndStatus_StatusIdIn(Long userId, List<Long> longs);
 }

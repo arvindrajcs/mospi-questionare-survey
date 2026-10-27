@@ -236,4 +236,22 @@ public class SurveyController {
         return new ResponseEntity<>(surveyService.getTestSurveyDetails(request), HttpStatus.OK);
     }
 
+    @Operation(summary = "This API is used to get all survey details using using survey status")
+    @PostMapping("/get/survey-by-status")
+    public ResponseEntity<ApiResponseWithPageable<List<TestSurveyResp>>> getSurveyDetailsByStatus(@RequestHeader("userId") Long userId, @RequestBody GetSurveyByStatusReq request) {
+        logger.info("trying to call getSurveyDetailsByStatus API");
+        return new ResponseEntity<>(surveyService.getSurveyDetailsByStatus(userId ,request), HttpStatus.OK);
+    }
+
+
+    //**********************SUBMITTED SURVEY******************************/
+
+
+    @Operation(summary = "This API is used to submitted survey details for survey ID")
+    @PostMapping("/submitted/survey")
+    public ResponseEntity<ApiResponse<DefaultResponse>> submittedSurvey(@RequestHeader("userId") Long userId, @RequestBody TestSurveyReq request) {
+        logger.info("trying to call submittedSurvey API");
+        return new ResponseEntity<>(surveyService.submittedSurvey(userId, request), HttpStatus.OK);
+    }
+
 }

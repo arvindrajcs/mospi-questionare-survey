@@ -16,6 +16,4 @@ public interface QuestionDetailsRepo extends JpaRepository<QuestionDetails, Long
     Page<QuestionDetails> findByBlock_BlockId(Long blockId, Pageable pageable);
     List<QuestionDetails> findAllBySurvey_SurveyId(Long surveyId);
 
-
-    boolean existsByCreatedByAndStatus_StatusIdIn(Long userId, List<Long> longs);
 }

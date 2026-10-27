@@ -16,6 +16,4 @@ public interface TemplateDetailsRepo extends JpaRepository<TemplateDetails, Long
     Page<TemplateDetails> findByCreatedBy(Long userId, Pageable pageable);
     Page<TemplateDetails> findBySurvey_SurveyId(Long surveyId, Pageable pageable);
     List<TemplateDetails> findAllBySurvey_SurveyId(Long surveyId);
-
-    boolean existsByCreatedByAndStatus_StatusIdIn(Long userId, List<Long> longs);
 }

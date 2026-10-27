@@ -82,6 +82,9 @@ public class SurveyServiceImpl implements SurveyService {
     @Autowired
     private SkipConditionRepo skipConditionRepo;
 
+    @Autowired
+    private UserInfoRepo userInfoRepo;
+
 
 
     //**********************SURVEY DETAILS******************************/
@@ -376,10 +379,6 @@ public class SurveyServiceImpl implements SurveyService {
 
         try {
 
-            boolean hasPendingOrDraftSurvey = templateDetailsRepo.existsByCreatedByAndStatus_StatusIdIn(userId, List.of(1L, 3L));
-            if (hasPendingOrDraftSurvey) {
-                throw new SDDException(false, "You cannot create a new survey template while you have an existing survey in Draft or Pending status.");
-            }
             // 1. Validate and fetch parent SurveyDetails entity
             SurveyDetails survey = surveyDetailsRepo.findById(request.getSurveyId())
                     .orElseThrow(() -> new SDDException(false, "Survey not found for ID: " + request.getSurveyId()));
@@ -389,7 +388,6 @@ public class SurveyServiceImpl implements SurveyService {
                     .templateName(request.getTemplateName())
                     .templateType(request.getTemplateType())
                     .survey(survey)
-                    .status(masStatusRepo.getReferenceById(1L))
                     .isActive(true)
                     .createdBy(userId)
                     .build();
@@ -510,8 +508,6 @@ public class SurveyServiceImpl implements SurveyService {
                             .templateName(template.getTemplateName())
                             .templateType(template.getTemplateType())
                             .surveyId(template.getSurvey() != null ? template.getSurvey().getSurveyId() : null)
-                            .statusId(template.getStatus() != null ? template.getStatus().getStatusId() : null)
-                            .statusDescription(template.getStatus() != null ? template.getStatus().getDescription() : null)
                             .isActive(template.isActive())
                             .createdBy(template.getCreatedBy())
                             .build()
@@ -554,8 +550,6 @@ public class SurveyServiceImpl implements SurveyService {
                             .templateName(template.getTemplateName())
                             .templateType(template.getTemplateType())
                             .surveyId(template.getSurvey() != null ? template.getSurvey().getSurveyId() : null)
-                            .statusId(template.getStatus() != null ? template.getStatus().getStatusId() : null)
-                            .statusDescription(template.getStatus() != null ? template.getStatus().getDescription() : null)
                             .isActive(template.isActive())
                             .createdBy(template.getCreatedBy())
                             .build()
@@ -588,11 +582,6 @@ public class SurveyServiceImpl implements SurveyService {
         logger.info("Starting schedule details creation for survey ID: {} by user: {}", request.getSurveyId(), userId);
 
         try {
-
-            boolean hasPendingOrDraftSurvey = scheduleDetailsRepo.existsByCreatedByAndStatus_StatusIdIn(userId, List.of(1L, 3L));
-            if (hasPendingOrDraftSurvey) {
-                throw new SDDException(false, "You cannot create a new survey schedule while you have an existing survey in Draft or Pending status.");
-            }
             // 1. Validate and fetch parent SurveyDetails entity
             SurveyDetails survey = surveyDetailsRepo.findById(request.getSurveyId())
                     .orElseThrow(() -> new SDDException(false, "Survey not found for ID: " + request.getSurveyId()));
@@ -610,7 +599,6 @@ public class SurveyServiceImpl implements SurveyService {
                     .survey(survey)
                     .scheduleType(scheduleType)
                     .scheduleAttributes(scheduleAttributes)
-                    .status(masStatusRepo.getReferenceById(1L))
                     .isActive(true)
                     .createdBy(userId)
                     .build();
@@ -751,8 +739,6 @@ public class SurveyServiceImpl implements SurveyService {
                             .scheduleTypeDescription(schedule.getScheduleType() != null ? schedule.getScheduleType().getDescription() : null)
                             .scheduleAttributesId(schedule.getScheduleAttributes() != null ? schedule.getScheduleAttributes().getScheduleAttributesId() : null)
                             .scheduleAttributesDescription(schedule.getScheduleAttributes() != null ? schedule.getScheduleAttributes().getDescription() : null)
-                            .statusId(schedule.getStatus() != null ? schedule.getStatus().getStatusId() : null)
-                            .statusDescription(schedule.getStatus() != null ? schedule.getStatus().getDescription() : null)
                             .isActive(schedule.isActive())
                             .createdBy(schedule.getCreatedBy())
                             .build()
@@ -799,8 +785,6 @@ public class SurveyServiceImpl implements SurveyService {
                             .scheduleTypeDescription(schedule.getScheduleType() != null ? schedule.getScheduleType().getDescription() : null)
                             .scheduleAttributesId(schedule.getScheduleAttributes() != null ? schedule.getScheduleAttributes().getScheduleAttributesId() : null)
                             .scheduleAttributesDescription(schedule.getScheduleAttributes() != null ? schedule.getScheduleAttributes().getDescription() : null)
-                            .statusId(schedule.getStatus() != null ? schedule.getStatus().getStatusId() : null)
-                            .statusDescription(schedule.getStatus() != null ? schedule.getStatus().getDescription() : null)
                             .isActive(schedule.isActive())
                             .createdBy(schedule.getCreatedBy())
                             .build()
@@ -835,10 +819,10 @@ public class SurveyServiceImpl implements SurveyService {
                 request.getScheduleId(), request.getSurveyId(), userId);
 
         try {
-            boolean hasPendingOrDraftSurvey = blockDetailsRepo.existsByCreatedByAndStatus_StatusIdIn(userId, List.of(1L, 3L));
-            if (hasPendingOrDraftSurvey) {
-                throw new SDDException(false, "You cannot create a new survey block while you have an existing survey in Draft or Pending status.");
-            }
+//            boolean hasPendingOrDraftSurvey = blockDetailsRepo.existsByCreatedByAndStatus_StatusIdIn(userId, List.of(1L, 3L));
+//            if (hasPendingOrDraftSurvey) {
+//                throw new SDDException(false, "You cannot create a new survey block while you have an existing survey in Draft or Pending status.");
+//            }
 
             // 1. Validate and fetch parent SurveyDetails entity
             SurveyDetails survey = surveyDetailsRepo.findById(request.getSurveyId())
@@ -854,7 +838,6 @@ public class SurveyServiceImpl implements SurveyService {
                     .schedule(schedule)
                     .blockHeading(request.getBlockHeading())
                     .blockCode(request.getBlockCode())
-                    .status(masStatusRepo.getReferenceById(1L))
                     .isActive(true)
                     .createdBy(userId)
                     .build();
@@ -981,8 +964,6 @@ public class SurveyServiceImpl implements SurveyService {
                             .scheduleId(block.getSchedule() != null ? block.getSchedule().getScheduleId() : null)
                             .blockHeading(block.getBlockHeading())
                             .blockCode(block.getBlockCode())
-                            .statusId(block.getStatus() != null ? block.getStatus().getStatusId() : null)
-                            .statusDescription(block.getStatus() != null ? block.getStatus().getDescription() : null)
                             .active(block.isActive())
                             .createdBy(block.getCreatedBy())
                             .build()
@@ -1028,8 +1009,6 @@ public class SurveyServiceImpl implements SurveyService {
                             .scheduleId(block.getSchedule() != null ? block.getSchedule().getScheduleId() : null)
                             .blockHeading(block.getBlockHeading())
                             .blockCode(block.getBlockCode())
-                            .statusId(block.getStatus() != null ? block.getStatus().getStatusId() : null)
-                            .statusDescription(block.getStatus() != null ? block.getStatus().getDescription() : null)
                             .active(block.isActive())
                             .createdBy(block.getCreatedBy())
                             .build()
@@ -1063,10 +1042,10 @@ public class SurveyServiceImpl implements SurveyService {
 
         try {
 
-            boolean hasPendingOrDraftSurvey = questionDetailsRepo.existsByCreatedByAndStatus_StatusIdIn(userId, List.of(1L, 3L));
-            if (hasPendingOrDraftSurvey) {
-                throw new SDDException(false, "You cannot create a new survey question under block while you have an existing survey in Draft or Pending status.");
-            }
+//            boolean hasPendingOrDraftSurvey = questionDetailsRepo.existsByCreatedByAndStatus_StatusIdIn(userId, List.of(1L, 3L));
+//            if (hasPendingOrDraftSurvey) {
+//                throw new SDDException(false, "You cannot create a new survey question under block while you have an existing survey in Draft or Pending status.");
+//            }
             // 1. Validate and fetch parent SurveyDetails entity
             SurveyDetails survey = surveyDetailsRepo.findById(request.getSurveyId())
                     .orElseThrow(() -> new SDDException(false, "Survey not found for ID: " + request.getSurveyId()));
@@ -1086,7 +1065,6 @@ public class SurveyServiceImpl implements SurveyService {
                     .dropDownValue(request.getDropDownValue())
                     .isMandatory(request.isMandatory())
                     .questionCondition(request.getQuestionCondition())
-                    .status(masStatusRepo.getReferenceById(1L))
                     .isActive(true)
                     .createdBy(userId)
                     .build();
@@ -1358,6 +1336,7 @@ public class SurveyServiceImpl implements SurveyService {
                         .isMandatory(question.isMandatory())
                         .skipConditionReq(skipConditions)
                         .questionValidationReq(validations)
+                        .questionCondition(question.getQuestionCondition())
                         .build();
             }).collect(Collectors.toList());
 
@@ -1426,6 +1405,7 @@ public class SurveyServiceImpl implements SurveyService {
                         .isMandatory(question.isMandatory())
                         .skipConditionReq(skipConditions)
                         .questionValidationReq(validations)
+                        .questionCondition(question.getQuestionCondition())
                         .build();
             }).collect(Collectors.toList());
 
@@ -1474,8 +1454,6 @@ public class SurveyServiceImpl implements SurveyService {
                             .templateName(template.getTemplateName())
                             .templateType(template.getTemplateType())
                             .surveyId(template.getSurvey() != null ? template.getSurvey().getSurveyId() : null)
-                            .statusId(template.getStatus() != null ? template.getStatus().getStatusId() : null)
-                            .statusDescription(template.getStatus() != null ? template.getStatus().getDescription() : null)
                             .isActive(template.isActive())
                             .createdBy(template.getCreatedBy())
                             .build()
@@ -1491,8 +1469,6 @@ public class SurveyServiceImpl implements SurveyService {
                             .scheduleTypeDescription(schedule.getScheduleType() != null ? schedule.getScheduleType().getDescription() : null)
                             .scheduleAttributesId(schedule.getScheduleAttributes() != null ? schedule.getScheduleAttributes().getScheduleAttributesId() : null)
                             .scheduleAttributesDescription(schedule.getScheduleAttributes() != null ? schedule.getScheduleAttributes().getDescription() : null)
-                            .statusId(schedule.getStatus() != null ? schedule.getStatus().getStatusId() : null)
-                            .statusDescription(schedule.getStatus() != null ? schedule.getStatus().getDescription() : null)
                             .isActive(schedule.isActive())
                             .createdBy(schedule.getCreatedBy())
                             .build()
@@ -1507,8 +1483,6 @@ public class SurveyServiceImpl implements SurveyService {
                             .scheduleId(block.getSchedule() != null ? block.getSchedule().getScheduleId() : null)
                             .blockHeading(block.getBlockHeading())
                             .blockCode(block.getBlockCode())
-                            .statusId(block.getStatus() != null ? block.getStatus().getStatusId() : null)
-                            .statusDescription(block.getStatus() != null ? block.getStatus().getDescription() : null)
                             .active(block.isActive())
                             .createdBy(block.getCreatedBy())
                             .build()
@@ -1547,6 +1521,7 @@ public class SurveyServiceImpl implements SurveyService {
                         .isMandatory(question.isMandatory())
                         .skipConditionReq(skipConditions)
                         .questionValidationReq(validations)
+                        .questionCondition(question.getQuestionCondition())
                         .build();
             }).collect(Collectors.toCollection(ArrayList::new));
 
@@ -1589,6 +1564,213 @@ public class SurveyServiceImpl implements SurveyService {
         } catch (Exception e) {
             logger.error("Error while fetching test survey details for surveyId: {}", request.getSurveyId(), e);
             throw new SDDException(false, "Unexpected error during test survey details retrieval");
+        }
+    }
+
+
+
+    @Transactional(readOnly = true)
+    @Override
+    public ApiResponseWithPageable<List<TestSurveyResp>> getSurveyDetailsByStatus(Long userId, GetSurveyByStatusReq request) {
+        logger.info("Fetching paginated survey details using survey status: {}", request.getStatus());
+
+        try {
+
+            if (userId == null) {
+                throw new SDDException(false, "User ID must be provided");
+            }
+            UserInfo users = userInfoRepo.findById(userId)
+                    .orElseThrow(() -> new SDDException(false, "Invalid User, User not found for ID: " + userId));
+
+            // 1. Validate status input
+            List<String> validStatuses = List.of("Draft", "Pending", "Approved", "Publish");
+
+            if (request.getStatus() == null ||
+                    validStatuses.stream().noneMatch(s -> s.equalsIgnoreCase(request.getStatus()))) {
+                throw new SDDException(false, "Invalid status. Status must be Draft, Pending, Approved, or Publish");
+            }
+
+            // 2. Map status string to respective Status ID (Draft=1, Pending=2, Approved=3, Publish=4)
+            Long statusId = switch (request.getStatus().toLowerCase()) {
+                case "draft" -> 1L;
+                case "pending" -> 2L;
+                case "approved" -> 3L;
+                case "publish" -> 4L;
+                default -> throw new SDDException(false, "Unsupported status mapping");
+            };
+
+            // 3. Setup pagination using your helper
+            Pageable pageable = helperUtils.getPageable(request.getPage(), request.getLimit());
+
+            // 4. Fetch paginated surveys by status ID
+            Page<SurveyDetails> surveyPage = surveyDetailsRepo.findByStatus_StatusIdAndCreatedBy(statusId, userId, pageable);
+
+            if (surveyPage.getContent().isEmpty()) {
+                throw new SDDException(false, "No survey details found for status and for this User: " + request.getStatus() + ":" + userId);
+            }
+
+            // 5. Map each SurveyDetails entity into TestSurveyResp with all related details
+            List<TestSurveyResp> responseList = surveyPage.getContent().stream().map(survey -> {
+                Long surveyId = survey.getSurveyId();
+
+                // Fetch and map related Templates
+                List<TemplateDetails> templates = templateDetailsRepo.findAllBySurvey_SurveyId(surveyId);
+                ArrayList<TemplateResp> templateResps = templates.stream().map(template ->
+                        TemplateResp.builder()
+                                .templateId(template.getTemplateId())
+                                .templateName(template.getTemplateName())
+                                .templateType(template.getTemplateType())
+                                .surveyId(surveyId)
+                                .isActive(template.isActive())
+                                .createdBy(template.getCreatedBy())
+                                .build()
+                ).collect(Collectors.toCollection(ArrayList::new));
+
+                // Fetch and map related Schedules
+                List<ScheduleDetails> schedules = scheduleDetailsRepo.findAllBySurvey_SurveyId(surveyId);
+                ArrayList<ScheduleResp> scheduleResps = schedules.stream().map(schedule ->
+                        ScheduleResp.builder()
+                                .scheduleId(schedule.getScheduleId())
+                                .surveyId(surveyId)
+                                .scheduleTypeId(schedule.getScheduleType() != null ? schedule.getScheduleType().getScheduleTypeId() : null)
+                                .scheduleTypeDescription(schedule.getScheduleType() != null ? schedule.getScheduleType().getDescription() : null)
+                                .scheduleAttributesId(schedule.getScheduleAttributes() != null ? schedule.getScheduleAttributes().getScheduleAttributesId() : null)
+                                .scheduleAttributesDescription(schedule.getScheduleAttributes() != null ? schedule.getScheduleAttributes().getDescription() : null)
+                                .isActive(schedule.isActive())
+                                .createdBy(schedule.getCreatedBy())
+                                .build()
+                ).collect(Collectors.toCollection(ArrayList::new));
+
+                // Fetch and map related Blocks
+                List<BlockDetails> blocks = blockDetailsRepo.findAllBySurvey_SurveyId(surveyId);
+                ArrayList<BlockResp> blockResps = blocks.stream().map(block ->
+                        BlockResp.builder()
+                                .blockId(block.getBlockId())
+                                .surveyId(surveyId)
+                                .scheduleId(block.getSchedule() != null ? block.getSchedule().getScheduleId() : null)
+                                .blockHeading(block.getBlockHeading())
+                                .blockCode(block.getBlockCode())
+                                .active(block.isActive())
+                                .createdBy(block.getCreatedBy())
+                                .build()
+                ).collect(Collectors.toCollection(ArrayList::new));
+
+                // Fetch and map related Questions with Skip Conditions & Validations
+                List<QuestionDetails> questions = questionDetailsRepo.findAllBySurvey_SurveyId(surveyId);
+                ArrayList<QuestionResp> questionResps = questions.stream().map(question -> {
+                    List<SkipConditionResp> skipConditions = question.getSkipConditions() != null ?
+                            question.getSkipConditions().stream().map(cond -> SkipConditionResp.builder()
+                                    .skipConditionId(cond.getSkipConditionId())
+                                    .questionId(cond.getTargetQuestion() != null ? cond.getTargetQuestion().getQuestionId() : null)
+                                    .condition(cond.getCondition())
+                                    .value(cond.getValue())
+                                    .build()).collect(Collectors.toList()) : Collections.emptyList();
+
+                    List<QuestionValidationResp> validations = question.getValidations() != null ?
+                            question.getValidations().stream().map(val -> QuestionValidationResp.builder()
+                                    .validationId(val.getValidationId())
+                                    .validationType(val.getValidationType())
+                                    .severityCheck(val.getSeverityCheck())
+                                    .value(val.getValue())
+                                    .errorMsg(val.getErrorMsg())
+                                    .build()).collect(Collectors.toList()) : Collections.emptyList();
+
+                    return QuestionResp.builder()
+                            .questionId(question.getQuestionId())
+                            .surveyId(surveyId)
+                            .blockId(question.getBlock() != null ? question.getBlock().getBlockId() : null)
+                            .questionNumber(question.getQuestionNumber())
+                            .fieldInstructions(question.getFieldInstructions())
+                            .questionHeading(question.getQuestionHeading())
+                            .dataFormate(question.getDataFormate())
+                            .dropDownValue(question.getDropDownValue())
+                            .isMandatory(question.isMandatory())
+                            .skipConditionReq(skipConditions)
+                            .questionValidationReq(validations)
+                            .questionCondition(question.getQuestionCondition())
+                            .build();
+                }).collect(Collectors.toCollection(ArrayList::new));
+
+                // Build aggregated TestSurveyResp object for each survey
+                return TestSurveyResp.builder()
+                        .surveyId(surveyId)
+                        .title(survey.getTitle())
+                        .periodicCycle(survey.getPeriodicCycle())
+                        .surveyCode(survey.getSurveyCode())
+                        .divisionId(survey.getDivision() != null ? survey.getDivision().getDivisionId() : null)
+                        .divisionDescription(survey.getDivision() != null ? survey.getDivision().getDescription() : null)
+                        .enquiryTypeId(survey.getEnquiryType() != null ? survey.getEnquiryType().getEnquiryTypeId() : null)
+                        .enquiryTypeDescription(survey.getEnquiryType() != null ? survey.getEnquiryType().getDescription() : null)
+                        .frequencyTypeId(survey.getFrequencyType() != null ? survey.getFrequencyType().getFrequencyTypeId() : null)
+                        .frequencyTypeDescription(survey.getFrequencyType() != null ? survey.getFrequencyType().getDescription() : null)
+                        .seasonalityFactorId(survey.getSeasonalityFactor() != null ? survey.getSeasonalityFactor().getSeasonalityFactorId() : null)
+                        .seasonalityFactorDescription(survey.getSeasonalityFactor() != null ? survey.getSeasonalityFactor().getDescription() : null)
+                        .surveyDuration(survey.getSurveyDuration())
+                        .ruralSamplingFrame(survey.getRuralSamplingFrame())
+                        .urbanSamplingFrame(survey.getUrbanSamplingFrame())
+                        .samplingSize(survey.getSamplingSize())
+                        .surveyObjective(survey.getSurveyObjective())
+                        .remarks(survey.getRemarks())
+                        .statusId(survey.getStatus() != null ? survey.getStatus().getStatusId() : null)
+                        .statusDescription(survey.getStatus() != null ? survey.getStatus().getDescription() : null)
+                        .isActive(survey.isActive())
+                        .createdBy(survey.getCreatedBy())
+                        .templateResp(templateResps)
+                        .scheduleResp(scheduleResps)
+                        .blockResp(blockResps)
+                        .questionResp(questionResps)
+                        .build();
+            }).collect(Collectors.toList());
+
+            logger.info("Survey details fetched and paginated successfully using status: {}", request.getStatus());
+
+            return ResponseUtils.createPageableSuccessResponse(
+                    responseList,
+                    surveyPage.getTotalElements(),
+                    surveyPage.getTotalPages(),
+                    pageable.getPageNumber() + 1,
+                    pageable.getPageSize()
+            );
+
+        } catch (SDDException e) {
+            throw e;
+        } catch (Exception e) {
+            logger.error("Error while fetching survey details using survey status: {}", request.getStatus(), e);
+            throw new SDDException(false, "Unexpected error during survey details retrieval using survey status");
+        }
+    }
+
+    //**********************SUBMITTED SURVEY******************************/
+
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public ApiResponse<DefaultResponse> submittedSurvey(Long userId, TestSurveyReq request) {
+        logger.info("Starting survey submission process for surveyId: {}", request != null ? request.getSurveyId() : null);
+
+        try {
+            if (request == null || request.getSurveyId() == null) {
+                throw new SDDException(false, "Survey ID must be provided");
+            }
+            if (request.getStatus() == null || !request.getStatus().equalsIgnoreCase("Pending")) {
+                throw new SDDException(false, "Invalid status. Status must be 'Pending'");
+            }
+            SurveyDetails survey = surveyDetailsRepo.findById(request.getSurveyId())
+                    .orElseThrow(() -> new SDDException(false, "Survey not found for ID: " + request.getSurveyId()));
+            MasStatus pendingStatus = masStatusRepo.findById(2L)
+                    .orElseThrow(() -> new SDDException(false, "Status configuration not found for ID: 2"));
+            survey.setStatus(pendingStatus);
+            survey.setUpdatedBy(userId);
+            surveyDetailsRepo.save(survey);
+            logger.info("Survey submitted successfully for surveyId: {}", request.getSurveyId());
+            DefaultResponse defaultResponse = new DefaultResponse();
+            defaultResponse.setMsg("Your survey is successfully submitted, pending for approval");
+            return ResponseUtils.createSuccessResponse(defaultResponse, new TypeReference<DefaultResponse>() {});
+
+        } catch (SDDException e) {
+            throw e;
+        } catch (Exception e) {
+            logger.error("Error while submitting survey", e);
+            throw new SDDException(false, "Unexpected error during survey submission");
         }
     }
 

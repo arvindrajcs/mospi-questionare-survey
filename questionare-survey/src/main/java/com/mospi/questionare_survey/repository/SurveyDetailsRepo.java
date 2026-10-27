@@ -15,4 +15,7 @@ public interface SurveyDetailsRepo extends JpaRepository<SurveyDetails, Long> {
     Page<SurveyDetails> findByCreatedBy(Long userId, Pageable pageable);
 
     boolean existsByCreatedByAndStatus_StatusIdIn(Long createdBy, List<Long> statusIds);
+
+    Page<SurveyDetails> findByStatus_StatusIdAndCreatedBy(Long statusId, Long createdBy, Pageable pageable);
+
 }

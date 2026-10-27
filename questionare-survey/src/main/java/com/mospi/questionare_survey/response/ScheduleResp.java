@@ -14,8 +14,6 @@ public class ScheduleResp {
     private String scheduleTypeDescription; // Optional: include master description if needed
     private Long scheduleAttributesId;
     private String scheduleAttributesDescription; // Optional
-    private Long statusId;
-    private String statusDescription;
     private boolean isActive;
     private Long createdBy;
 }

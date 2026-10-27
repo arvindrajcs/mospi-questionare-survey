@@ -11,4 +11,5 @@ import lombok.Setter;
 @AllArgsConstructor
 public class TestSurveyReq {
     private Long surveyId;
+    private String status;
 }

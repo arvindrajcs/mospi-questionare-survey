@@ -73,13 +73,6 @@ public class QuestionDetails {
     @Builder.Default
     @OneToMany(mappedBy = "question", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<QuestionValidation> validations = new ArrayList<>();
-    // ----------------------------
-
-    // Many questions belong to one Status
-    @ToString.Exclude
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "status_id", nullable = false)
-    private MasStatus status;
 
     @Builder.Default
     @Column(name = "is_active", nullable = false)

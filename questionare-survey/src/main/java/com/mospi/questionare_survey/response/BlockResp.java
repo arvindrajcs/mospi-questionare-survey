@@ -13,8 +13,6 @@ public class BlockResp {
     private Long scheduleId;
     private String blockHeading;
     private String blockCode;
-    private Long statusId;
-    private String statusDescription;
     private boolean active;
     private Long createdBy;
 }

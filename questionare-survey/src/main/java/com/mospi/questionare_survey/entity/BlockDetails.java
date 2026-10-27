@@ -45,12 +45,6 @@ public class BlockDetails {
     @Column(name = "block_code", nullable = false) // Fixed casing convention for column name
     private String blockCode;
 
-    // Many blocks belong to one Status
-    @ToString.Exclude
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "status_id", nullable = false)
-    private MasStatus status;
-
     @Builder.Default
     @Column(name = "is_active", nullable = false)
     private boolean isActive = true;

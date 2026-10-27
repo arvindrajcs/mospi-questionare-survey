@@ -51,4 +51,11 @@ public interface SurveyService {
     //**********************TEST SURVEY******************************/
 
     ApiResponse<TestSurveyResp> getTestSurveyDetails(TestSurveyReq request);
+    ApiResponseWithPageable<List<TestSurveyResp>>  getSurveyDetailsByStatus(Long userId, GetSurveyByStatusReq request);
+
+    //**********************SUBMITTED SURVEY******************************/
+
+    ApiResponse<DefaultResponse> submittedSurvey(Long userId, TestSurveyReq request);
+
+
 }

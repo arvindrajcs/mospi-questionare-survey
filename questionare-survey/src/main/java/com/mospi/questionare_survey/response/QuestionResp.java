@@ -19,6 +19,7 @@ public class QuestionResp {
     private String dataFormate;
     private String dropDownValue;
     private boolean isMandatory;
+    private String questionCondition;
 
     private List<SkipConditionResp> skipConditionReq;
     private List<QuestionValidationResp> questionValidationReq;
