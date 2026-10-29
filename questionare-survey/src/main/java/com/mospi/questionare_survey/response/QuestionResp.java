@@ -11,6 +11,7 @@ import java.util.List;
 @Builder
 public class QuestionResp {
     private Long questionId;
+    private String questionCode;
     private Long surveyId;
     private Long blockId;
     private String questionNumber;

@@ -17,13 +17,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.time.OffsetDateTime;
+import java.util.*;
 import java.util.stream.Collectors;
 
 
@@ -33,6 +32,9 @@ import java.util.stream.Collectors;
 public class SurveyServiceImpl implements SurveyService {
 
     private final Logger logger = LoggerFactory.getLogger(SurveyServiceImpl.class);
+
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
 
     @Autowired
     private HelperUtils helperUtils;
@@ -84,6 +86,12 @@ public class SurveyServiceImpl implements SurveyService {
 
     @Autowired
     private UserInfoRepo userInfoRepo;
+
+    @Autowired
+    private MappingUserRoleRepo mappingUserRoleRepo;
+
+    @Autowired
+    private AssignDetailsRepo assignDetailsRepo;
 
 
 
@@ -310,12 +318,19 @@ public class SurveyServiceImpl implements SurveyService {
 
     @Transactional(readOnly = true)
     @Override
-    public ApiResponseWithPageable<List<SurveyResp>> getAllSurveyDetails(GetSurveyReq request) {
+    public ApiResponseWithPageable<List<SurveyResp>> getAllSurveyDetails(Long userId,GetSurveyReq request) {
         logger.info("Fetching all survey details with pagination and DTO mapping");
 
         try {
+            if (userId == null) {
+                throw new SDDException(false, "User ID must be provided");
+            }
+            UserInfo users = userInfoRepo.findById(userId)
+                    .orElseThrow(() -> new SDDException(false, "Invalid User, User not found for ID: " + userId));
+
+
             Pageable pageable = helperUtils.getPageable(request.getPage(), request.getLimit());
-            Page<SurveyDetails> surveyPage = surveyDetailsRepo.findAll(pageable);
+            Page<SurveyDetails> surveyPage = surveyDetailsRepo.findByCreatedBy(userId,pageable);
 
             if (surveyPage.getContent().isEmpty()) {
                 throw new SDDException(false, "No survey details found");
@@ -1054,8 +1069,19 @@ public class SurveyServiceImpl implements SurveyService {
             BlockDetails block = blockDetailsRepo.findById(request.getBlockId())
                     .orElseThrow(() -> new SDDException(false, "Block not found for ID: " + request.getBlockId()));
 
+            String surveyCode = (survey != null && survey.getSurveyCode() != null)
+                    ? survey.getSurveyCode().replaceAll("\\s+", "").toUpperCase() : "";
+
+            String blockCode = (block != null && block.getBlockCode() != null)
+                    ? block.getBlockCode().replaceAll("\\s+", "").toUpperCase() : "";
+
+            String questionNum = (request != null && request.getQuestionNumber() != null)
+                    ? request.getQuestionNumber().replaceAll("\\s+", "").toUpperCase() : "";
+            String questionCode = surveyCode + blockCode + questionNum;
+
             // 3. Build and save QuestionDetails
             QuestionDetails questionDetails = QuestionDetails.builder()
+                    .questionCode(questionCode)
                     .survey(survey)
                     .block(block)
                     .questionNumber(request.getQuestionNumber())
@@ -1326,6 +1352,7 @@ public class SurveyServiceImpl implements SurveyService {
 
                 return QuestionResp.builder()
                         .questionId(question.getQuestionId())
+                        .questionCode(question.getQuestionCode())
                         .surveyId(question.getSurvey() != null ? question.getSurvey().getSurveyId() : null)
                         .blockId(question.getBlock() != null ? question.getBlock().getBlockId() : null)
                         .questionNumber(question.getQuestionNumber())
@@ -1358,21 +1385,126 @@ public class SurveyServiceImpl implements SurveyService {
         }
     }
 
+//    @Transactional(readOnly = true)
+//    @Override
+//    public ApiResponseWithPageable<List<QuestionResp>> getAllQuestionDetails(GetQuestionReq request) {
+//        logger.info("Fetching all question details with conditions & validations and pagination");
+//
+//        try {
+//            Pageable pageable = helperUtils.getPageable(request.getPage(), request.getLimit());
+//            Page<QuestionDetails> questionPage = questionDetailsRepo.findAll(pageable);
+//
+//            if (questionPage.getContent().isEmpty()) {
+//                throw new SDDException(false, "No question details found");
+//            }
+//
+//            // Map QuestionDetails entities to QuestionResp matching your nested structure
+//            List<QuestionResp> responseList = questionPage.getContent().stream().map(question -> {
+//
+//                // Map skip conditions
+//                List<SkipConditionResp> skipConditions = question.getSkipConditions() != null ?
+//                        question.getSkipConditions().stream().map(cond -> SkipConditionResp.builder()
+//                                .skipConditionId(cond.getSkipConditionId())
+//                                .questionId(cond.getTargetQuestion() != null ? cond.getTargetQuestion().getQuestionId() : null)
+//                                .condition(cond.getCondition())
+//                                .value(cond.getValue())
+//                                .build()).collect(Collectors.toList()) : Collections.emptyList();
+//
+//                // Map validations
+//                List<QuestionValidationResp> validations = question.getValidations() != null ?
+//                        question.getValidations().stream().map(val -> QuestionValidationResp.builder()
+//                                .validationId(val.getValidationId())
+//                                .validationType(val.getValidationType())
+//                                .severityCheck(val.getSeverityCheck())
+//                                .value(val.getValue())
+//                                .errorMsg(val.getErrorMsg())
+//                                .build()).collect(Collectors.toList()) : Collections.emptyList();
+//
+//                return QuestionResp.builder()
+//                        .questionId(question.getQuestionId())
+//                        .questionCode(question.getQuestionCode())
+//                        .surveyId(question.getSurvey() != null ? question.getSurvey().getSurveyId() : null)
+//                        .blockId(question.getBlock() != null ? question.getBlock().getBlockId() : null)
+//                        .questionNumber(question.getQuestionNumber())
+//                        .fieldInstructions(question.getFieldInstructions())
+//                        .questionHeading(question.getQuestionHeading())
+//                        .dataFormate(question.getDataFormate())
+//                        .dropDownValue(question.getDropDownValue())
+//                        .isMandatory(question.isMandatory())
+//                        .skipConditionReq(skipConditions)
+//                        .questionValidationReq(validations)
+//                        .questionCondition(question.getQuestionCondition())
+//                        .build();
+//            }).collect(Collectors.toList());
+//
+//            logger.info("All question details with conditions and validations mapped and fetched successfully");
+//
+//            return ResponseUtils.createPageableSuccessResponse(
+//                    responseList,
+//                    questionPage.getTotalElements(),
+//                    questionPage.getTotalPages(),
+//                    pageable.getPageNumber() + 1,
+//                    pageable.getPageSize()
+//            );
+//
+//        } catch (SDDException e) {
+//            throw e;
+//        } catch (Exception e) {
+//            logger.error("Error while fetching all question details", e);
+//            throw new SDDException(false, "Unexpected error during all question details retrieval");
+//        }
+//    }
+
+
+
     @Transactional(readOnly = true)
     @Override
     public ApiResponseWithPageable<List<QuestionResp>> getAllQuestionDetails(GetQuestionReq request) {
-        logger.info("Fetching all question details with conditions & validations and pagination");
+        logger.info("Fetching all question details with conditions & validations");
 
         try {
-            Pageable pageable = helperUtils.getPageable(request.getPage(), request.getLimit());
-            Page<QuestionDetails> questionPage = questionDetailsRepo.findAll(pageable);
+            List<QuestionDetails> questionList;
+            long totalElements;
+            int totalPages;
+            int pageNumber;
+            int pageSize;
 
-            if (questionPage.getContent().isEmpty()) {
-                throw new SDDException(false, "No question details found");
+            // Check if page or limit is null/zero/negative
+            boolean isUnpaged = request == null ||
+                    request.getPage() == null || request.getPage() <= 0 ||
+                    request.getLimit() == null || request.getLimit() <= 0;
+
+            if (isUnpaged) {
+                // Scenario 1: Fetch all records without pagination
+                questionList = questionDetailsRepo.findAll();
+
+                if (questionList.isEmpty()) {
+                    throw new SDDException(false, "No question details found");
+                }
+
+                totalElements = questionList.size();
+                totalPages = 1;
+                pageNumber = 1;
+                pageSize = (int) totalElements; // Or whatever default size you prefer
+
+            } else {
+                // Scenario 2: Fetch records with pagination
+                Pageable pageable = helperUtils.getPageable(request.getPage(), request.getLimit());
+                Page<QuestionDetails> questionPage = questionDetailsRepo.findAll(pageable);
+
+                if (questionPage.getContent().isEmpty()) {
+                    throw new SDDException(false, "No question details found");
+                }
+
+                questionList = questionPage.getContent();
+                totalElements = questionPage.getTotalElements();
+                totalPages = questionPage.getTotalPages();
+                pageNumber = pageable.getPageNumber() + 1;
+                pageSize = pageable.getPageSize();
             }
 
             // Map QuestionDetails entities to QuestionResp matching your nested structure
-            List<QuestionResp> responseList = questionPage.getContent().stream().map(question -> {
+            List<QuestionResp> responseList = questionList.stream().map(question -> {
 
                 // Map skip conditions
                 List<SkipConditionResp> skipConditions = question.getSkipConditions() != null ?
@@ -1395,6 +1527,7 @@ public class SurveyServiceImpl implements SurveyService {
 
                 return QuestionResp.builder()
                         .questionId(question.getQuestionId())
+                        .questionCode(question.getQuestionCode())
                         .surveyId(question.getSurvey() != null ? question.getSurvey().getSurveyId() : null)
                         .blockId(question.getBlock() != null ? question.getBlock().getBlockId() : null)
                         .questionNumber(question.getQuestionNumber())
@@ -1409,14 +1542,14 @@ public class SurveyServiceImpl implements SurveyService {
                         .build();
             }).collect(Collectors.toList());
 
-            logger.info("All question details with conditions and validations mapped and fetched successfully");
+            logger.info("All question details mapped and fetched successfully (Unpaged: {})", isUnpaged);
 
             return ResponseUtils.createPageableSuccessResponse(
                     responseList,
-                    questionPage.getTotalElements(),
-                    questionPage.getTotalPages(),
-                    pageable.getPageNumber() + 1,
-                    pageable.getPageSize()
+                    totalElements,
+                    totalPages,
+                    pageNumber,
+                    pageSize
             );
 
         } catch (SDDException e) {
@@ -1511,6 +1644,7 @@ public class SurveyServiceImpl implements SurveyService {
 
                 return QuestionResp.builder()
                         .questionId(question.getQuestionId())
+                        .questionCode(question.getQuestionCode())
                         .surveyId(question.getSurvey() != null ? question.getSurvey().getSurveyId() : null)
                         .blockId(question.getBlock() != null ? question.getBlock().getBlockId() : null)
                         .questionNumber(question.getQuestionNumber())
@@ -1582,28 +1716,33 @@ public class SurveyServiceImpl implements SurveyService {
             UserInfo users = userInfoRepo.findById(userId)
                     .orElseThrow(() -> new SDDException(false, "Invalid User, User not found for ID: " + userId));
 
-            // 1. Validate status input
-            List<String> validStatuses = List.of("Draft", "Pending", "Approved", "Publish");
+            List<MappingUserRole> userRole =mappingUserRoleRepo.findByUser(users);
+
+            List<String> validStatuses = List.of("Draft", "Pending", "Approved", "Publish", "All");
 
             if (request.getStatus() == null ||
                     validStatuses.stream().noneMatch(s -> s.equalsIgnoreCase(request.getStatus()))) {
-                throw new SDDException(false, "Invalid status. Status must be Draft, Pending, Approved, or Publish");
+                throw new SDDException(false, "Invalid status. Status must be Draft, Pending, Approved, or Publish or All");
             }
 
-            // 2. Map status string to respective Status ID (Draft=1, Pending=2, Approved=3, Publish=4)
+
             Long statusId = switch (request.getStatus().toLowerCase()) {
                 case "draft" -> 1L;
                 case "pending" -> 2L;
                 case "approved" -> 3L;
                 case "publish" -> 4L;
+                case "all" -> 0L;
                 default -> throw new SDDException(false, "Unsupported status mapping");
             };
 
-            // 3. Setup pagination using your helper
+            Page<SurveyDetails> surveyPage;
             Pageable pageable = helperUtils.getPageable(request.getPage(), request.getLimit());
 
-            // 4. Fetch paginated surveys by status ID
-            Page<SurveyDetails> surveyPage = surveyDetailsRepo.findByStatus_StatusIdAndCreatedBy(statusId, userId, pageable);
+            if (statusId ==0){
+                surveyPage = surveyDetailsRepo.findByCreatedBy(userId, pageable);
+            }else{
+                surveyPage = surveyDetailsRepo.findByStatus_StatusIdAndCreatedBy(statusId, userId, pageable);
+            }
 
             if (surveyPage.getContent().isEmpty()) {
                 throw new SDDException(false, "No survey details found for status and for this User: " + request.getStatus() + ":" + userId);
@@ -1677,6 +1816,7 @@ public class SurveyServiceImpl implements SurveyService {
 
                     return QuestionResp.builder()
                             .questionId(question.getQuestionId())
+                            .questionCode(question.getQuestionCode())
                             .surveyId(surveyId)
                             .blockId(question.getBlock() != null ? question.getBlock().getBlockId() : null)
                             .questionNumber(question.getQuestionNumber())
@@ -1740,6 +1880,184 @@ public class SurveyServiceImpl implements SurveyService {
         }
     }
 
+    @Transactional(readOnly = true)
+    @Override
+    public ApiResponseWithPageable<List<TestSurveyResp>> getSurveyInfo(Long userId, GetSurveyByStatusReq request) {
+        logger.info("Fetching paginated survey info using survey status: {}", request.getStatus());
+
+        try {
+
+            if (userId == null) {
+                throw new SDDException(false, "User ID must be provided");
+            }
+            UserInfo users = userInfoRepo.findById(userId)
+                    .orElseThrow(() -> new SDDException(false, "Invalid User, User not found for ID: " + userId));
+
+            List<MappingUserRole> userRole =mappingUserRoleRepo.findByUser(users);
+
+            List<String> validStatuses = List.of("Pending", "Approved", "Publish","Rejected","Assigned");
+
+            if (request.getStatus() == null ||
+                    validStatuses.stream().noneMatch(s -> s.equalsIgnoreCase(request.getStatus()))) {
+                throw new SDDException(false, "Invalid status. Status must be Pending, Approved, Publish ,Assigned, or Rejected");
+            }
+
+
+            Long statusId = switch (request.getStatus().toLowerCase()) {
+                case "pending" -> 2L;
+                case "approved" -> 3L;
+                case "publish" -> 4L;
+                case "rejected" -> 5L;
+                case "assigned" -> 6L;
+                default -> throw new SDDException(false, "Unsupported status mapping");
+            };
+
+            Page<SurveyDetails> surveyPage;
+            Pageable pageable = helperUtils.getPageable(request.getPage(), request.getLimit());
+
+            if (userRole.getFirst().getRole().getRoleId() ==2 || userRole.getFirst().getRole().getRoleId() ==3){
+                surveyPage = surveyDetailsRepo.findByStatus_StatusId(statusId, pageable);
+            }else{
+                throw new SDDException(false, "User Not Authorized for get survey details for this User: " + userId);
+            }
+
+            if (surveyPage.getContent().isEmpty()) {
+                throw new SDDException(false, "No survey details found for status and for this User: " + request.getStatus() + ":" + userId);
+            }
+
+            // 5. Map each SurveyDetails entity into TestSurveyResp with all related details
+            List<TestSurveyResp> responseList = surveyPage.getContent().stream().map(survey -> {
+                Long surveyId = survey.getSurveyId();
+
+                // Fetch and map related Templates
+                List<TemplateDetails> templates = templateDetailsRepo.findAllBySurvey_SurveyId(surveyId);
+                ArrayList<TemplateResp> templateResps = templates.stream().map(template ->
+                        TemplateResp.builder()
+                                .templateId(template.getTemplateId())
+                                .templateName(template.getTemplateName())
+                                .templateType(template.getTemplateType())
+                                .surveyId(surveyId)
+                                .isActive(template.isActive())
+                                .createdBy(template.getCreatedBy())
+                                .build()
+                ).collect(Collectors.toCollection(ArrayList::new));
+
+                // Fetch and map related Schedules
+                List<ScheduleDetails> schedules = scheduleDetailsRepo.findAllBySurvey_SurveyId(surveyId);
+                ArrayList<ScheduleResp> scheduleResps = schedules.stream().map(schedule ->
+                        ScheduleResp.builder()
+                                .scheduleId(schedule.getScheduleId())
+                                .surveyId(surveyId)
+                                .scheduleTypeId(schedule.getScheduleType() != null ? schedule.getScheduleType().getScheduleTypeId() : null)
+                                .scheduleTypeDescription(schedule.getScheduleType() != null ? schedule.getScheduleType().getDescription() : null)
+                                .scheduleAttributesId(schedule.getScheduleAttributes() != null ? schedule.getScheduleAttributes().getScheduleAttributesId() : null)
+                                .scheduleAttributesDescription(schedule.getScheduleAttributes() != null ? schedule.getScheduleAttributes().getDescription() : null)
+                                .isActive(schedule.isActive())
+                                .createdBy(schedule.getCreatedBy())
+                                .build()
+                ).collect(Collectors.toCollection(ArrayList::new));
+
+                // Fetch and map related Blocks
+                List<BlockDetails> blocks = blockDetailsRepo.findAllBySurvey_SurveyId(surveyId);
+                ArrayList<BlockResp> blockResps = blocks.stream().map(block ->
+                        BlockResp.builder()
+                                .blockId(block.getBlockId())
+                                .surveyId(surveyId)
+                                .scheduleId(block.getSchedule() != null ? block.getSchedule().getScheduleId() : null)
+                                .blockHeading(block.getBlockHeading())
+                                .blockCode(block.getBlockCode())
+                                .active(block.isActive())
+                                .createdBy(block.getCreatedBy())
+                                .build()
+                ).collect(Collectors.toCollection(ArrayList::new));
+
+                // Fetch and map related Questions with Skip Conditions & Validations
+                List<QuestionDetails> questions = questionDetailsRepo.findAllBySurvey_SurveyId(surveyId);
+                ArrayList<QuestionResp> questionResps = questions.stream().map(question -> {
+                    List<SkipConditionResp> skipConditions = question.getSkipConditions() != null ?
+                            question.getSkipConditions().stream().map(cond -> SkipConditionResp.builder()
+                                    .skipConditionId(cond.getSkipConditionId())
+                                    .questionId(cond.getTargetQuestion() != null ? cond.getTargetQuestion().getQuestionId() : null)
+                                    .condition(cond.getCondition())
+                                    .value(cond.getValue())
+                                    .build()).collect(Collectors.toList()) : Collections.emptyList();
+
+                    List<QuestionValidationResp> validations = question.getValidations() != null ?
+                            question.getValidations().stream().map(val -> QuestionValidationResp.builder()
+                                    .validationId(val.getValidationId())
+                                    .validationType(val.getValidationType())
+                                    .severityCheck(val.getSeverityCheck())
+                                    .value(val.getValue())
+                                    .errorMsg(val.getErrorMsg())
+                                    .build()).collect(Collectors.toList()) : Collections.emptyList();
+
+                    return QuestionResp.builder()
+                            .questionId(question.getQuestionId())
+                            .questionCode(question.getQuestionCode())
+                            .surveyId(surveyId)
+                            .blockId(question.getBlock() != null ? question.getBlock().getBlockId() : null)
+                            .questionNumber(question.getQuestionNumber())
+                            .fieldInstructions(question.getFieldInstructions())
+                            .questionHeading(question.getQuestionHeading())
+                            .dataFormate(question.getDataFormate())
+                            .dropDownValue(question.getDropDownValue())
+                            .isMandatory(question.isMandatory())
+                            .skipConditionReq(skipConditions)
+                            .questionValidationReq(validations)
+                            .questionCondition(question.getQuestionCondition())
+                            .build();
+                }).collect(Collectors.toCollection(ArrayList::new));
+
+                // Build aggregated TestSurveyResp object for each survey
+                return TestSurveyResp.builder()
+                        .surveyId(surveyId)
+                        .title(survey.getTitle())
+                        .periodicCycle(survey.getPeriodicCycle())
+                        .surveyCode(survey.getSurveyCode())
+                        .divisionId(survey.getDivision() != null ? survey.getDivision().getDivisionId() : null)
+                        .divisionDescription(survey.getDivision() != null ? survey.getDivision().getDescription() : null)
+                        .enquiryTypeId(survey.getEnquiryType() != null ? survey.getEnquiryType().getEnquiryTypeId() : null)
+                        .enquiryTypeDescription(survey.getEnquiryType() != null ? survey.getEnquiryType().getDescription() : null)
+                        .frequencyTypeId(survey.getFrequencyType() != null ? survey.getFrequencyType().getFrequencyTypeId() : null)
+                        .frequencyTypeDescription(survey.getFrequencyType() != null ? survey.getFrequencyType().getDescription() : null)
+                        .seasonalityFactorId(survey.getSeasonalityFactor() != null ? survey.getSeasonalityFactor().getSeasonalityFactorId() : null)
+                        .seasonalityFactorDescription(survey.getSeasonalityFactor() != null ? survey.getSeasonalityFactor().getDescription() : null)
+                        .surveyDuration(survey.getSurveyDuration())
+                        .ruralSamplingFrame(survey.getRuralSamplingFrame())
+                        .urbanSamplingFrame(survey.getUrbanSamplingFrame())
+                        .samplingSize(survey.getSamplingSize())
+                        .surveyObjective(survey.getSurveyObjective())
+                        .remarks(survey.getRemarks())
+                        .statusId(survey.getStatus() != null ? survey.getStatus().getStatusId() : null)
+                        .statusDescription(survey.getStatus() != null ? survey.getStatus().getDescription() : null)
+                        .isActive(survey.isActive())
+                        .createdBy(survey.getCreatedBy())
+                        .templateResp(templateResps)
+                        .scheduleResp(scheduleResps)
+                        .blockResp(blockResps)
+                        .questionResp(questionResps)
+                        .build();
+            }).collect(Collectors.toList());
+
+            logger.info("Survey details fetched and paginated successfully using status: {}", request.getStatus());
+
+            return ResponseUtils.createPageableSuccessResponse(
+                    responseList,
+                    surveyPage.getTotalElements(),
+                    surveyPage.getTotalPages(),
+                    pageable.getPageNumber() + 1,
+                    pageable.getPageSize()
+            );
+
+        } catch (SDDException e) {
+            throw e;
+        } catch (Exception e) {
+            logger.error("Error while fetching survey details using survey status: {}", request.getStatus(), e);
+            throw new SDDException(false, "Unexpected error during survey details retrieval using survey status");
+        }
+    }
+
+
     //**********************SUBMITTED SURVEY******************************/
 
     @Transactional(rollbackFor = Exception.class)
@@ -1775,4 +2093,531 @@ public class SurveyServiceImpl implements SurveyService {
     }
 
 
+
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public ApiResponse<DefaultResponse> surveyAction(Long userId, SurveyActionReq request) {
+        logger.info("Starting survey action process for surveyId: {} by user: {}",
+                request != null ? request.getSurveyId() : null, userId);
+
+        try {
+            if (request == null || request.getSurveyId() == null) {
+                throw new SDDException(false, "Survey ID must be provided");
+            }
+
+            if (request.getAction() == null) {
+                throw new SDDException(false, "Action must be provided");
+            }
+
+            SurveyDetails survey = surveyDetailsRepo.findById(request.getSurveyId())
+                    .orElseThrow(() -> new SDDException(false, "Survey not found for ID: " + request.getSurveyId()));
+
+            MasStatus targetStatus;
+
+            if (request.getAction().equalsIgnoreCase("approved")) {
+                targetStatus = masStatusRepo.findById(3L)
+                        .orElseThrow(() -> new SDDException(false, "Approved status configuration not found (ID: 3)"));
+                // --- TRIGGER DYNAMIC TABLE CREATION UPON APPROVAL ---
+                helperUtils.generateResponseTableForSurvey(survey.getSurveyId(), survey.getSurveyCode());
+
+            } else if (request.getAction().equalsIgnoreCase("rejected")) {
+                targetStatus = masStatusRepo.findById(5L)
+                        .orElseThrow(() -> new SDDException(false, "Rejected status configuration not found (ID: 5)"));
+            } else {
+                throw new SDDException(false, "Invalid action. Action must be 'approved' or 'rejected'");
+            }
+            survey.setStatus(targetStatus);
+            survey.setApprovedBy(userId);
+            survey.setApprovedAt(OffsetDateTime.now());
+            survey.setUpdatedBy(userId);
+            surveyDetailsRepo.save(survey);
+            logger.info("Survey action '{}' completed successfully for surveyId: {}",
+                    targetStatus.getDescription(), request.getSurveyId());
+            DefaultResponse defaultResponse = new DefaultResponse();
+            defaultResponse.setMsg("Survey " + targetStatus.getDescription().toLowerCase() + " successfully");
+            return ResponseUtils.createSuccessResponse(defaultResponse, new TypeReference<DefaultResponse>() {});
+
+        } catch (SDDException e) {
+            throw e;
+        } catch (Exception e) {
+            logger.error("Error while processing survey action for surveyId: {}",
+                    request != null ? request.getSurveyId() : null, e);
+            throw new SDDException(false, "Unexpected error during survey action processing");
+        }
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public ApiResponse<DefaultResponse> surveyAssign(Long userId, SurveyAssignReq request) {
+        logger.info("Starting survey assignment process for surveyId: {} to assignUserId: {} by user: {}",
+                request != null ? request.getSurveyId() : null,
+                request != null ? request.getAssignUserId() : null,
+                userId);
+
+        try {
+            if (request == null || request.getSurveyId() == null || request.getAssignUserId() == null) {
+                throw new SDDException(false, "Survey ID and Assign User ID must be provided");
+            }
+
+            SurveyDetails survey = surveyDetailsRepo.findById(request.getSurveyId())
+                    .orElseThrow(() -> new SDDException(false, "Survey not found for ID: " + request.getSurveyId()));
+
+            MasStatus assignedStatus = masStatusRepo.findById(6L)
+                    .orElseThrow(() -> new SDDException(false, "Status configuration not found for ID: 6 (Assigned)"));
+
+            AssignDetails assignDetails = AssignDetails.builder()
+                    .survey(survey)
+                    .assignTo(request.getAssignUserId())
+                    .isActive(true)
+                    .createdBy(userId)
+                    .build();
+
+            assignDetailsRepo.save(assignDetails);
+
+            survey.setStatus(assignedStatus);
+            survey.setUpdatedBy(userId);
+            surveyDetailsRepo.save(survey);
+
+            logger.info("Survey assigned successfully for surveyId: {} to userId: {}", request.getSurveyId(), request.getAssignUserId());
+
+            DefaultResponse defaultResponse = new DefaultResponse();
+            defaultResponse.setMsg("Survey assigned successfully");
+
+            return ResponseUtils.createSuccessResponse(defaultResponse, new TypeReference<DefaultResponse>() {});
+
+        } catch (SDDException e) {
+            throw e;
+        } catch (Exception e) {
+            logger.error("Error while assigning survey for surveyId: {}",
+                    request != null ? request.getSurveyId() : null, e);
+            throw new SDDException(false, "Unexpected error during survey assignment");
+        }
+    }
+
+
+
+    @Override
+    public ApiResponseWithPageable<List<TestSurveyResp>> getSurveyInfoFieldUser(Long userId, GetSurveyByStatusReq request) {
+        logger.info("Fetching paginated survey info for field User: {}", userId);
+
+        try {
+            if (userId == null) {
+                throw new SDDException(false, "User ID must be provided");
+            }
+
+            UserInfo users = userInfoRepo.findById(userId)
+                    .orElseThrow(() -> new SDDException(false, "Invalid User, User not found for ID: " + userId));
+
+            // 1. Check if the user has Role ID 7
+            boolean hasFieldUserRole = mappingUserRoleRepo.findByUser(users).stream()
+                    .anyMatch(mapping -> mapping.getRole() != null && mapping.getRole().getRoleId() != null
+                            && mapping.getRole().getRoleId().equals(7L));
+
+            if (!hasFieldUserRole) {
+                throw new SDDException(false, "Access denied. User does not have the required field user role (Role ID: 7)");
+            }
+
+            // 2. Fetch assigned survey IDs from AssignDetails table where assignTo = userId and isActive = true
+            List<AssignDetails> assignDetailsList = assignDetailsRepo.findByAssignToAndIsActive(userId, true);
+
+            List<Long> assignedSurveyIds = assignDetailsList.stream()
+                    .filter(assign -> assign.getSurvey() != null)
+                    .map(assign -> assign.getSurvey().getSurveyId())
+                    .distinct()
+                    .collect(Collectors.toList());
+
+            Pageable pageable = helperUtils.getPageable(request.getPage(), request.getLimit());
+            Page<SurveyDetails> surveyPage;
+
+            if (assignedSurveyIds.isEmpty()) {
+                // If no surveys are assigned, return empty page or throw exception
+                throw new SDDException(false, "No assigned surveys found for this user");
+            }
+
+            // 3. Find surveys from the assigned list that have Status ID 6 (Assigned) with pagination
+            // Note: You need to add this method in your SurveyDetailsRepo
+            surveyPage = surveyDetailsRepo.findBySurveyIdInAndStatus_StatusId(assignedSurveyIds, 6L, pageable);
+
+            if (surveyPage.getContent().isEmpty()) {
+                throw new SDDException(false, "No survey details found with status 'Assigned' (ID: 6) for this User: " + userId);
+            }
+
+            // 4. Map each SurveyDetails entity into TestSurveyResp with all related details
+            List<TestSurveyResp> responseList = surveyPage.getContent().stream().map(survey -> {
+                Long surveyId = survey.getSurveyId();
+
+                // Fetch and map related Templates
+                List<TemplateDetails> templates = templateDetailsRepo.findAllBySurvey_SurveyId(surveyId);
+                ArrayList<TemplateResp> templateResps = templates.stream().map(template ->
+                        TemplateResp.builder()
+                                .templateId(template.getTemplateId())
+                                .templateName(template.getTemplateName())
+                                .templateType(template.getTemplateType())
+                                .surveyId(surveyId)
+                                .isActive(template.isActive())
+                                .createdBy(template.getCreatedBy())
+                                .build()
+                ).collect(Collectors.toCollection(ArrayList::new));
+
+                // Fetch and map related Schedules
+                List<ScheduleDetails> schedules = scheduleDetailsRepo.findAllBySurvey_SurveyId(surveyId);
+                ArrayList<ScheduleResp> scheduleResps = schedules.stream().map(schedule ->
+                        ScheduleResp.builder()
+                                .scheduleId(schedule.getScheduleId())
+                                .surveyId(surveyId)
+                                .scheduleTypeId(schedule.getScheduleType() != null ? schedule.getScheduleType().getScheduleTypeId() : null)
+                                .scheduleTypeDescription(schedule.getScheduleType() != null ? schedule.getScheduleType().getDescription() : null)
+                                .scheduleAttributesId(schedule.getScheduleAttributes() != null ? schedule.getScheduleAttributes().getScheduleAttributesId() : null)
+                                .scheduleAttributesDescription(schedule.getScheduleAttributes() != null ? schedule.getScheduleAttributes().getDescription() : null)
+                                .isActive(schedule.isActive())
+                                .createdBy(schedule.getCreatedBy())
+                                .build()
+                ).collect(Collectors.toCollection(ArrayList::new));
+
+                // Fetch and map related Blocks
+                List<BlockDetails> blocks = blockDetailsRepo.findAllBySurvey_SurveyId(surveyId);
+                ArrayList<BlockResp> blockResps = blocks.stream().map(block ->
+                        BlockResp.builder()
+                                .blockId(block.getBlockId())
+                                .surveyId(surveyId)
+                                .scheduleId(block.getSchedule() != null ? block.getSchedule().getScheduleId() : null)
+                                .blockHeading(block.getBlockHeading())
+                                .blockCode(block.getBlockCode())
+                                .active(block.isActive())
+                                .createdBy(block.getCreatedBy())
+                                .build()
+                ).collect(Collectors.toCollection(ArrayList::new));
+
+                // Fetch and map related Questions with Skip Conditions & Validations
+                List<QuestionDetails> questions = questionDetailsRepo.findAllBySurvey_SurveyId(surveyId);
+                ArrayList<QuestionResp> questionResps = questions.stream().map(question -> {
+                    List<SkipConditionResp> skipConditions = question.getSkipConditions() != null ?
+                            question.getSkipConditions().stream().map(cond -> SkipConditionResp.builder()
+                                    .skipConditionId(cond.getSkipConditionId())
+                                    .questionId(cond.getTargetQuestion() != null ? cond.getTargetQuestion().getQuestionId() : null)
+                                    .condition(cond.getCondition())
+                                    .value(cond.getValue())
+                                    .build()).collect(Collectors.toList()) : Collections.emptyList();
+
+                    List<QuestionValidationResp> validations = question.getValidations() != null ?
+                            question.getValidations().stream().map(val -> QuestionValidationResp.builder()
+                                    .validationId(val.getValidationId())
+                                    .validationType(val.getValidationType())
+                                    .severityCheck(val.getSeverityCheck())
+                                    .value(val.getValue())
+                                    .errorMsg(val.getErrorMsg())
+                                    .build()).collect(Collectors.toList()) : Collections.emptyList();
+
+                    return QuestionResp.builder()
+                            .questionId(question.getQuestionId())
+                            .questionCode(question.getQuestionCode())
+                            .surveyId(surveyId)
+                            .blockId(question.getBlock() != null ? question.getBlock().getBlockId() : null)
+                            .questionNumber(question.getQuestionNumber())
+                            .fieldInstructions(question.getFieldInstructions())
+                            .questionHeading(question.getQuestionHeading())
+                            .dataFormate(question.getDataFormate())
+                            .dropDownValue(question.getDropDownValue())
+                            .isMandatory(question.isMandatory())
+                            .skipConditionReq(skipConditions)
+                            .questionValidationReq(validations)
+                            .questionCondition(question.getQuestionCondition())
+                            .build();
+                }).collect(Collectors.toCollection(ArrayList::new));
+
+                // Build aggregated TestSurveyResp object for each survey
+                return TestSurveyResp.builder()
+                        .surveyId(surveyId)
+                        .title(survey.getTitle())
+                        .periodicCycle(survey.getPeriodicCycle())
+                        .surveyCode(survey.getSurveyCode())
+                        .divisionId(survey.getDivision() != null ? survey.getDivision().getDivisionId() : null)
+                        .divisionDescription(survey.getDivision() != null ? survey.getDivision().getDescription() : null)
+                        .enquiryTypeId(survey.getEnquiryType() != null ? survey.getEnquiryType().getEnquiryTypeId() : null)
+                        .enquiryTypeDescription(survey.getEnquiryType() != null ? survey.getEnquiryType().getDescription() : null)
+                        .frequencyTypeId(survey.getFrequencyType() != null ? survey.getFrequencyType().getFrequencyTypeId() : null)
+                        .frequencyTypeDescription(survey.getFrequencyType() != null ? survey.getFrequencyType().getDescription() : null)
+                        .seasonalityFactorId(survey.getSeasonalityFactor() != null ? survey.getSeasonalityFactor().getSeasonalityFactorId() : null)
+                        .seasonalityFactorDescription(survey.getSeasonalityFactor() != null ? survey.getSeasonalityFactor().getDescription() : null)
+                        .surveyDuration(survey.getSurveyDuration())
+                        .ruralSamplingFrame(survey.getRuralSamplingFrame())
+                        .urbanSamplingFrame(survey.getUrbanSamplingFrame())
+                        .samplingSize(survey.getSamplingSize())
+                        .surveyObjective(survey.getSurveyObjective())
+                        .remarks(survey.getRemarks())
+                        .statusId(survey.getStatus() != null ? survey.getStatus().getStatusId() : null)
+                        .statusDescription(survey.getStatus() != null ? survey.getStatus().getDescription() : null)
+                        .isActive(survey.isActive())
+                        .createdBy(survey.getCreatedBy())
+                        .templateResp(templateResps)
+                        .scheduleResp(scheduleResps)
+                        .blockResp(blockResps)
+                        .questionResp(questionResps)
+                        .build();
+            }).collect(Collectors.toList());
+
+            logger.info("Survey details fetched and paginated successfully For Field user: {}", userId);
+
+            return ResponseUtils.createPageableSuccessResponse(
+                    responseList,
+                    surveyPage.getTotalElements(),
+                    surveyPage.getTotalPages(),
+                    pageable.getPageNumber() + 1,
+                    pageable.getPageSize()
+            );
+
+        } catch (SDDException e) {
+            throw e;
+        } catch (Exception e) {
+            logger.error("Error while fetching survey details for Field User: {}", userId, e);
+            throw new SDDException(false, "Unexpected error during survey details For Field user");
+        }
+    }
+
+
+    //**********************DATA COLLECTION******************************/
+
+
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public ApiResponse<DefaultResponse> saveDataCollection(Long userId, SurveyDataCollectionReq request) {
+        logger.info("Starting survey data collection process for surveyId: {} by user: {}",
+                request != null ? request.getSurveyId() : null, userId);
+
+        try {
+            // 1. Validate request parameters
+            if (request == null || request.getSurveyId() == null || request.getAnswers() == null || request.getAnswers().isEmpty()) {
+                throw new SDDException(false, "Survey ID and answers must be provided");
+            }
+
+            if (userId == null) {
+                throw new SDDException(false, "User ID must be provided");
+            }
+
+            // 2. Fetch SurveyDetails to ensure the survey exists and get its surveyCode
+            SurveyDetails survey = surveyDetailsRepo.findById(request.getSurveyId())
+                    .orElseThrow(() -> new SDDException(false, "Survey not found for ID: " + request.getSurveyId()));
+
+            String rawSurveyCode = survey.getSurveyCode();
+            if (rawSurveyCode == null || rawSurveyCode.trim().isEmpty()) {
+                throw new SDDException(false, "Survey code is missing for survey ID: " + request.getSurveyId());
+            }
+
+            // 3. Clean and format table name (e.g., fact_plfs2026)
+            String cleanedSurveyCode = rawSurveyCode.replaceAll("\\s+", "").replaceAll("[^a-zA-Z0-9_]", "").toLowerCase();
+            String tableName = "fact_" + cleanedSurveyCode;
+
+            // 4. Build dynamic SQL INSERT query safely using JdbcTemplate
+            StringBuilder columns = new StringBuilder("user_id");
+            StringBuilder placeholders = new StringBuilder("?");
+            List<Object> values = new ArrayList<>();
+            values.add(userId);
+
+            for (Map.Entry<String, String> entry : request.getAnswers().entrySet()) {
+                // Sanitize questionCode (column name) to be 100% safe against SQL injection
+                String colName = entry.getKey().replaceAll("\\s+", "").replaceAll("[^a-zA-Z0-9_]", "").toLowerCase();
+
+                columns.append(", ").append(colName);
+                placeholders.append(", ?");
+                values.add(entry.getValue());
+            }
+
+            String sql = String.format("INSERT INTO %s (%s) VALUES (%s)", tableName, columns.toString(), placeholders.toString());
+
+            // 5. Execute insertion via JdbcTemplate
+            jdbcTemplate.update(sql, values.toArray());
+
+            logger.info("Survey data collection saved successfully into table '{}' for user: {}", tableName, userId);
+
+            // 6. Prepare success response
+            DefaultResponse defaultResponse = new DefaultResponse();
+            defaultResponse.setMsg("Survey data collected and saved successfully");
+
+            return ResponseUtils.createSuccessResponse(defaultResponse, new TypeReference<DefaultResponse>() {});
+
+        } catch (SDDException e) {
+            throw e;
+        } catch (Exception e) {
+            logger.error("Error while saving survey data collection for surveyId: {}",
+                    request != null ? request.getSurveyId() : null, e);
+            throw new SDDException(false, "Unexpected error during survey data collection submission");
+        }
+    }
+
+//    @Override
+//    public ApiResponseWithPageable<List<Map<String, Object>>> getCollectedData(GetSurveyDataReq request) {
+//        logger.info("Fetching paginated data for surveyCode: {} or surveyId: {}",
+//                request != null ? request.getSurveyCode() : null,
+//                request != null ? request.getSurveyId() : null);
+//        try {
+//            // 1. Validation
+//            if (request == null || (request.getSurveyId() == null && (request.getSurveyCode() == null || request.getSurveyCode().trim().isEmpty()))) {
+//                throw new SDDException(false, "Either Survey ID or Survey Code must be provided");
+//            }
+//            String surveyCode = request.getSurveyCode();
+//            // Agar request mein sirf surveyId diya hai, toh database se surveyCode nikal lein
+//            if ((surveyCode == null || surveyCode.trim().isEmpty()) && request.getSurveyId() != null) {
+//                SurveyDetails survey = surveyDetailsRepo.findById(request.getSurveyId())
+//                        .orElseThrow(() -> new SDDException(false, "Survey not found for ID: " + request.getSurveyId()));
+//                surveyCode = survey.getSurveyCode();
+//            }
+//            // 2. Clean and format table name (e.g., fact_plfs2026)
+//            String cleanedSurveyCode = surveyCode.replaceAll("\\s+", "").replaceAll("[^a-zA-Z0-9_]", "").toLowerCase();
+//            String tableName = "fact_" + cleanedSurveyCode;
+//            // 3. Get pageable instance (Default page: 1, limit: 10 ya jo bhi aapka helper utils provide kare)
+//            Pageable pageable = helperUtils.getPageable(request.getPage(), request.getLimit());
+//            int limit = pageable.getPageSize();
+//            long offset = pageable.getOffset();
+//            List<Map<String, Object>> resultList;
+//            long totalElements = 0;
+//            try {
+//                // 4. Count total records in the dynamic table for pagination metadata
+//                String countSql = String.format("SELECT COUNT(*) FROM %s", tableName);
+//                totalElements = jdbcTemplate.queryForObject(countSql, Long.class);
+//
+//                // 5. Dynamic Paginated Query (SELECT * FROM table LIMIT ? OFFSET ?)
+//                String sql = String.format("SELECT * FROM %s LIMIT ? OFFSET ?", tableName);
+//                resultList = jdbcTemplate.queryForList(sql, limit, offset);
+//
+//            } catch (Exception e) {
+//                logger.error("Table '{}' does not exist or failed to query data", tableName, e);
+//                throw new SDDException(false, "Response table for survey code '" + surveyCode + "' does not exist yet.");
+//            }
+//
+//            // Calculate total pages
+//            int totalPages = (limit > 0) ? (int) Math.ceil((double) totalElements / limit) : 0;
+//
+//            logger.info("Successfully fetched {} records from table '{}'", resultList.size(), tableName);
+//
+//            // 6. Return pageable success response matching your controller signature
+//            return ResponseUtils.createPageableSuccessResponse(
+//                    resultList,
+//                    totalElements,
+//                    totalPages,
+//                    pageable.getPageNumber() + 1,
+//                    pageable.getPageSize()
+//            );
+//
+//        } catch (SDDException e) {
+//            throw e;
+//        } catch (Exception e) {
+//            logger.error("Error while fetching survey data collection", e);
+//            throw new SDDException(false, "Unexpected error during fetching survey data");
+//        }
+//    }
+
+
+    @Override
+    public ApiResponseWithPageable<List<Map<String, Object>>> getCollectedData(GetSurveyDataReq request) {
+        logger.info("Fetching paginated data with question headings for surveyCode: {} or surveyId: {}",
+                request != null ? request.getSurveyCode() : null,
+                request != null ? request.getSurveyId() : null);
+
+        try {
+            // 1. Validation
+            if (request == null || (request.getSurveyId() == null && (request.getSurveyCode() == null || request.getSurveyCode().trim().isEmpty()))) {
+                throw new SDDException(false, "Either Survey ID or Survey Code must be provided");
+            }
+
+            Long surveyId = request.getSurveyId();
+            String surveyCode = request.getSurveyCode();
+
+            // 2. Fetch survey details to get surveyId and surveyCode if either is missing
+            Long finalSurveyId = request.getSurveyId();
+            String resolvedSurveyCode = request.getSurveyCode();
+
+            if (finalSurveyId != null && (resolvedSurveyCode == null || resolvedSurveyCode.trim().isEmpty())) {
+                SurveyDetails survey = surveyDetailsRepo.findById(finalSurveyId)
+                        .orElseThrow(() -> new SDDException(false, "Survey not found for ID: " + finalSurveyId));
+                resolvedSurveyCode = survey.getSurveyCode();
+
+            }
+
+            // 3. Fetch all Question Details for this survey to build a Code -> Heading lookup map
+            List<QuestionDetails> questions = questionDetailsRepo.findAllBySurvey_SurveyId(surveyId);
+
+            // Map banayenge: Key = questionCode (lowercase/clean), Value = questionHeading
+            Map<String, String> questionHeadingMap = new HashMap<>();
+            for (QuestionDetails q : questions) {
+                if (q.getQuestionCode() != null) {
+                    String cleanCode = q.getQuestionCode().replaceAll("\\s+", "").replaceAll("[^a-zA-Z0-9_]", "").toLowerCase();
+                    questionHeadingMap.put(cleanCode, q.getQuestionHeading());
+                }
+            }
+
+            // 4. Clean and format table name (e.g., fact_plfs2026)
+            String cleanedSurveyCode = surveyCode.replaceAll("\\s+", "").replaceAll("[^a-zA-Z0-9_]", "").toLowerCase();
+            String tableName = "fact_" + cleanedSurveyCode;
+
+            // 5. Get pageable instance
+            Pageable pageable = helperUtils.getPageable(request.getPage(), request.getLimit());
+            int limit = pageable.getPageSize();
+            long offset = pageable.getOffset();
+
+            List<Map<String, Object>> rawResultList;
+            long totalElements = 0;
+
+            try {
+                // Count total records
+                String countSql = String.format("SELECT COUNT(*) FROM %s", tableName);
+                totalElements = jdbcTemplate.queryForObject(countSql, Long.class);
+
+                // Fetch paginated data from dynamic table
+                String sql = String.format("SELECT * FROM %s LIMIT ? OFFSET ?", tableName);
+                rawResultList = jdbcTemplate.queryForList(sql, limit, offset);
+
+            } catch (Exception e) {
+                logger.error("Table '{}' does not exist or failed to query data", tableName, e);
+                throw new SDDException(false, "Response table for survey code '" + surveyCode + "' does not exist yet.");
+            }
+
+            // 6. Transform raw data to include Question Headings alongside Question Codes
+            List<Map<String, Object>> enhancedResultList = new ArrayList<>();
+
+            for (Map<String, Object> row : rawResultList) {
+                Map<String, Object> enhancedRow = new LinkedHashMap<>(); // LinkedHashMap preserves order
+
+                for (Map.Entry<String, Object> entry : row.entrySet()) {
+                    String columnName = entry.getKey();
+                    Object value = entry.getValue();
+
+                    // System columns (jaise response_id, user_id, submitted_at) ko waise hi rakhne dein
+                    if (columnName.equals("response_id") || columnName.equals("user_id") || columnName.equals("submitted_at")) {
+                        enhancedRow.put(columnName, value);
+                    } else {
+                        // Question code ke liye heading fetch karein
+                        String heading = questionHeadingMap.get(columnName);
+
+                        // Ek structured format ya nested object bana sakte hain, ya phir clear naming de sakte hain
+                        Map<String, Object> questionMeta = new LinkedHashMap<>();
+                        questionMeta.put("questionCode", columnName);
+                        questionMeta.put("questionHeading", heading != null ? heading : "Unknown Heading");
+                        questionMeta.put("answer", value);
+
+                        enhancedRow.put(columnName, questionMeta);
+                    }
+                }
+                enhancedResultList.add(enhancedRow);
+            }
+
+            // Calculate total pages
+            int totalPages = (limit > 0) ? (int) Math.ceil((double) totalElements / limit) : 0;
+
+            logger.info("Successfully fetched and enhanced {} records from table '{}'", enhancedResultList.size(), tableName);
+
+            return ResponseUtils.createPageableSuccessResponse(
+                    enhancedResultList,
+                    totalElements,
+                    totalPages,
+                    pageable.getPageNumber() + 1,
+                    pageable.getPageSize()
+            );
+
+        } catch (SDDException e) {
+            throw e;
+        } catch (Exception e) {
+            logger.error("Error while fetching enhanced survey data collection", e);
+            throw new SDDException(false, "Unexpected error during fetching survey data");
+        }
+    }
 }

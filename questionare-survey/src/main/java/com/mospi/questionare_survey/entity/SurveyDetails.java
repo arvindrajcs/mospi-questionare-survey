@@ -107,4 +107,11 @@ public class SurveyDetails {
     @UpdateTimestamp
     @Column(name = "updated_at")
     private OffsetDateTime updatedAt;
+
+    @Column(name = "approved_by")
+    private Long approvedBy;
+
+    @UpdateTimestamp
+    @Column(name = "approved_at")
+    private OffsetDateTime approvedAt;
 }

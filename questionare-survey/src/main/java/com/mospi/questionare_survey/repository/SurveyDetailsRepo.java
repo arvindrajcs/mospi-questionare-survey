@@ -12,10 +12,20 @@ import java.util.Optional;
 @Repository
 public interface SurveyDetailsRepo extends JpaRepository<SurveyDetails, Long> {
 
+    // Fetch surveys created by a specific user with pagination
     Page<SurveyDetails> findByCreatedBy(Long userId, Pageable pageable);
 
+    // Check if user has any active surveys in specific statuses (e.g., Draft or Pending)
     boolean existsByCreatedByAndStatus_StatusIdIn(Long createdBy, List<Long> statusIds);
 
+    // Fetch surveys filtered by status ID and created by user with pagination
     Page<SurveyDetails> findByStatus_StatusIdAndCreatedBy(Long statusId, Long createdBy, Pageable pageable);
+
+    // Corrected method for fetching surveys filtered strictly by status ID with pagination
+    Page<SurveyDetails> findByStatus_StatusId(Long statusId, Pageable pageable);
+
+    Page<SurveyDetails> findBySurveyIdInAndStatus_StatusId(List<Long> surveyIds, Long statusId, Pageable pageable);
+
+    Optional<SurveyDetails> findBySurveyId(Long surveyId);
 
 }

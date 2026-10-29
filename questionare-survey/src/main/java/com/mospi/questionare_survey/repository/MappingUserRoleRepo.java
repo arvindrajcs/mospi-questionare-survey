@@ -3,6 +3,8 @@ package com.mospi.questionare_survey.repository;
 import com.mospi.questionare_survey.entity.MappingUserRole;
 import com.mospi.questionare_survey.entity.MasRole;
 import com.mospi.questionare_survey.entity.UserInfo;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -20,4 +22,7 @@ public interface MappingUserRoleRepo extends JpaRepository<MappingUserRole, Long
 
     @Query("SELECT r.roleName FROM MappingUserRole m JOIN m.role r WHERE m.user.userId = :userId AND m.isActive = true")
     List<String> findRoleNamesByUserId(@Param("userId") Long userId);
+
+    @Query("SELECT m.user FROM MappingUserRole m WHERE m.role.roleId = :roleId AND m.isActive = true")
+    Page<UserInfo> findUsersByRoleId(@Param("roleId") Long roleId, Pageable pageable);
 }

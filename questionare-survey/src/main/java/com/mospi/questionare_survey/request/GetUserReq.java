@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 @JsonIgnoreProperties(ignoreUnknown = false)
 public class GetUserReq {
     private Long userId;
+    private Long rollId;
     private Long page;
     private Long limit;
 }

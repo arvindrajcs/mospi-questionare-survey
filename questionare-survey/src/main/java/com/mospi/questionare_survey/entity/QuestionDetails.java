@@ -29,6 +29,9 @@ public class QuestionDetails {
     @Column(name = "question_id", updatable = false, nullable = false)
     private Long questionId;
 
+    @Column(name = "question_code", nullable = false, unique = true, length = 50)
+    private String questionCode;
+
     // Many questions belong to one Survey Details record
     @ToString.Exclude
     @ManyToOne(fetch = FetchType.LAZY, optional = false)

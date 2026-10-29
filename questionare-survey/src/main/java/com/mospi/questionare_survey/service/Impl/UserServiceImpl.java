@@ -6,6 +6,7 @@ import com.mospi.questionare_survey.exception.SDDException;
 import com.mospi.questionare_survey.helperUtil.ErrorCode;
 import com.mospi.questionare_survey.helperUtil.HelperUtils;
 import com.mospi.questionare_survey.helperUtil.ResponseUtils;
+import com.mospi.questionare_survey.repository.MappingUserRoleRepo;
 import com.mospi.questionare_survey.repository.UserInfoRepo;
 import com.mospi.questionare_survey.request.CreateUserReq;
 import com.mospi.questionare_survey.request.GetUserReq;
@@ -44,6 +45,9 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     private UserInfoRepo userInfoRepo;
+
+    @Autowired
+    private MappingUserRoleRepo mappingUserRoleRepo;
 
 
     @Transactional(rollbackFor = Exception.class)
@@ -146,8 +150,8 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public ApiResponseWithPageable<List<UserInfoResp>> getAllUserWithPage(GetUserReq request) {
-        logger.info("Fetching User Details. UserId: {}, Page: {}, Limit: {}",
-                request.getUserId(), request.getPage(), request.getLimit());
+        logger.info("Fetching User Details. UserId: {}, RollId: {}, Page: {}, Limit: {}",
+                request.getUserId(), request.getRollId(), request.getPage(), request.getLimit());
 
         try {
             Pageable pageable = helperUtill.getPageable(request.getPage(), request.getLimit());
@@ -164,8 +168,18 @@ public class UserServiceImpl implements UserService {
                 totalElements = 1;
                 totalPages = 1;
 
+            } else if (request.getRollId() != null) {
+                // Scenario 2: If rollId is provided (and userId is null), fetch users by roleId with pagination
+                Page<UserInfo> userPage = mappingUserRoleRepo.findUsersByRoleId(request.getRollId(), pageable);
+                totalElements = userPage.getTotalElements();
+                totalPages = userPage.getTotalPages();
+
+                for (UserInfo user : userPage.getContent()) {
+                    userInfoRespList.add(mapToUserInfoResp(user));
+                }
+
             } else {
-                // Scenario 2: If userId is NOT provided, paginate through all users
+                // Scenario 3: If neither userId nor rollId is provided, paginate through all users
                 Page<UserInfo> userPage = userInfoRepo.findAll(pageable);
                 totalElements = userPage.getTotalElements();
                 totalPages = userPage.getTotalPages();

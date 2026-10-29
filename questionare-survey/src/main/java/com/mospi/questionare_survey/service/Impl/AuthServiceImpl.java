@@ -3,6 +3,7 @@ package com.mospi.questionare_survey.service.Impl;
 
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.mospi.questionare_survey.entity.MappingUserRole;
 import com.mospi.questionare_survey.entity.UserInfo;
 import com.mospi.questionare_survey.exception.SDDException;
 import com.mospi.questionare_survey.helperUtil.ErrorCode;
@@ -10,6 +11,7 @@ import com.mospi.questionare_survey.helperUtil.HelperUtils;
 import com.mospi.questionare_survey.helperUtil.ResponseUtils;
 import com.mospi.questionare_survey.jwt.JwtUtil;
 import com.mospi.questionare_survey.jwt.RefreshTokenService;
+import com.mospi.questionare_survey.repository.MappingUserRoleRepo;
 import com.mospi.questionare_survey.repository.UserInfoRepo;
 import com.mospi.questionare_survey.request.AuthRequest;
 import com.mospi.questionare_survey.request.TokenRefreshRequest;
@@ -55,6 +57,7 @@ public class AuthServiceImpl implements AuthService {
     private final UserInfoRepo userInfoRepo;
     private final UserDetailsService userDetailsService;
     private final HelperUtils helperUtils;
+    private final MappingUserRoleRepo mappingUserRoleRepo;
 
     @Transactional(rollbackFor = {Exception.class})
     @Override
@@ -80,6 +83,7 @@ public class AuthServiceImpl implements AuthService {
             // 2. Fetch UserInfo entity
             UserInfo userinfo = userInfoRepo
                     .findByUsernameIgnoreCaseAndIsActive(username, true);
+            List<MappingUserRole> userRole =mappingUserRoleRepo.findByUser(userinfo);
 
             if (userinfo == null) {
                 throw new SDDException(false, ErrorCode.AU1000);
@@ -103,6 +107,8 @@ public class AuthServiceImpl implements AuthService {
 
             resp.setAccessToken(accessToken);
             resp.setRefreshToken(refreshToken);
+            resp.setRoleId(userRole.getFirst().getRole().getRoleId());
+            resp.setRoleName(userRole.getFirst().getRole().getRoleName());
 
             return ResponseUtils.createSuccessResponse(
                     resp, new TypeReference<AuthResponse>() {}

@@ -15,6 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/survey")
@@ -65,9 +66,9 @@ public class SurveyController {
 
     @Operation(summary = "This API is used to get all survey details with pagination")
     @PostMapping("/get/all-survey-details")
-    public ResponseEntity<ApiResponseWithPageable<List<SurveyResp>>> getAllSurveyDetails(@RequestBody GetSurveyReq request) {
+    public ResponseEntity<ApiResponseWithPageable<List<SurveyResp>>> getAllSurveyDetails(@RequestHeader("userId") Long userId, @RequestBody GetSurveyReq request) {
         logger.info("trying to call getAllSurveyDetails API");
-        return new ResponseEntity<>(surveyService.getAllSurveyDetails(request), HttpStatus.OK);
+        return new ResponseEntity<>(surveyService.getAllSurveyDetails(userId, request), HttpStatus.OK);
     }
 
 
@@ -243,6 +244,13 @@ public class SurveyController {
         return new ResponseEntity<>(surveyService.getSurveyDetailsByStatus(userId ,request), HttpStatus.OK);
     }
 
+    @Operation(summary = "This API is used to get all survey details")
+    @PostMapping("/get/survey-info")
+    public ResponseEntity<ApiResponseWithPageable<List<TestSurveyResp>>> getSurveyInfo(@RequestHeader("userId") Long userId, @RequestBody GetSurveyByStatusReq request) {
+        logger.info("trying to call getSurveyInfo API");
+        return new ResponseEntity<>(surveyService.getSurveyInfo(userId ,request), HttpStatus.OK);
+    }
+
 
     //**********************SUBMITTED SURVEY******************************/
 
@@ -253,5 +261,46 @@ public class SurveyController {
         logger.info("trying to call submittedSurvey API");
         return new ResponseEntity<>(surveyService.submittedSurvey(userId, request), HttpStatus.OK);
     }
+
+    @Operation(summary = "This API is used to Approved or Rejected the survey details for survey ID")
+    @PostMapping("/action/approved")
+    public ResponseEntity<ApiResponse<DefaultResponse>> surveyAction(@RequestHeader("userId") Long userId, @RequestBody SurveyActionReq request) {
+        logger.info("trying to call surveyAction API");
+        return new ResponseEntity<>(surveyService.surveyAction(userId, request), HttpStatus.OK);
+    }
+
+    @Operation(summary = "This API is used to Approved survey Assign to Field User")
+    @PostMapping("/action/assign")
+    public ResponseEntity<ApiResponse<DefaultResponse>> surveyAssign(@RequestHeader("userId") Long userId, @RequestBody SurveyAssignReq request) {
+        logger.info("trying to call surveyAssign API");
+        return new ResponseEntity<>(surveyService.surveyAssign(userId, request), HttpStatus.OK);
+    }
+
+    @Operation(summary = "This API is used to get all survey details for field user")
+    @PostMapping("/get/survey-field-user")
+    public ResponseEntity<ApiResponseWithPageable<List<TestSurveyResp>>> getSurveyInfoFieldUser(@RequestHeader("userId") Long userId, @RequestBody GetSurveyByStatusReq request) {
+        logger.info("trying to call getSurveyInfoFieldUser API");
+        return new ResponseEntity<>(surveyService.getSurveyInfoFieldUser(userId ,request), HttpStatus.OK);
+    }
+
+    //**********************DATA COLLECTION******************************/
+
+    @Operation(summary = "This API is used to Collect Survey data according to question by Field User")
+    @PostMapping("/collect/data")
+    public ResponseEntity<ApiResponse<DefaultResponse>> saveDataCollection(@RequestHeader("userId") Long userId, @RequestBody SurveyDataCollectionReq request) {
+        logger.info("trying to call saveDataCollection API");
+        return new ResponseEntity<>(surveyService.saveDataCollection(userId, request), HttpStatus.OK);
+    }
+
+
+    @Operation(summary = "This API is used to get all survey collected data dynamically based on survey code")
+    @PostMapping("/get/collected-data")
+    public ResponseEntity<ApiResponseWithPageable<List<Map<String, Object>>>> getCollectedData(@RequestHeader("userId") Long userId, @RequestBody GetSurveyDataReq request) {
+        logger.info("Trying to call getCollectedData API for surveyId: {} or surveyCode: {} by user: {}", request != null ? request.getSurveyId() : null, request != null ? request.getSurveyCode() : null, userId);
+        ApiResponseWithPageable<List<Map<String, Object>>> response = surveyService.getCollectedData(request);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+
 
 }

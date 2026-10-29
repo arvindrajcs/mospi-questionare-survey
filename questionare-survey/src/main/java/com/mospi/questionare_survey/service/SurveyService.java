@@ -5,6 +5,7 @@ import com.mospi.questionare_survey.request.*;
 import com.mospi.questionare_survey.response.*;
 
 import java.util.List;
+import java.util.Map;
 
 public interface SurveyService {
 
@@ -14,7 +15,7 @@ public interface SurveyService {
     ApiResponse<SurveyCreateResp> updateSurveyDetails(Long userId, UpdateSurveyReq request);
     ApiResponse<SurveyCreateResp> updateSurveyStatus(Long userId, SurveyStatusReq request);
     ApiResponseWithPageable<List<SurveyResp>> getSurveyDetailsById(GetSurveyReq request);
-    ApiResponseWithPageable<List<SurveyResp>> getAllSurveyDetails(GetSurveyReq request);
+    ApiResponseWithPageable<List<SurveyResp>> getAllSurveyDetails(Long userId,GetSurveyReq request);
 
     //**********************TEMPLATE DETAILS******************************/
 
@@ -52,10 +53,18 @@ public interface SurveyService {
 
     ApiResponse<TestSurveyResp> getTestSurveyDetails(TestSurveyReq request);
     ApiResponseWithPageable<List<TestSurveyResp>>  getSurveyDetailsByStatus(Long userId, GetSurveyByStatusReq request);
+    ApiResponseWithPageable<List<TestSurveyResp>>  getSurveyInfo(Long userId, GetSurveyByStatusReq request);
+
 
     //**********************SUBMITTED SURVEY******************************/
 
     ApiResponse<DefaultResponse> submittedSurvey(Long userId, TestSurveyReq request);
+    ApiResponse<DefaultResponse> surveyAction(Long userId, SurveyActionReq request);
+    ApiResponse<DefaultResponse> surveyAssign(Long userId, SurveyAssignReq request);
+    ApiResponseWithPageable<List<TestSurveyResp>> getSurveyInfoFieldUser(Long userId, GetSurveyByStatusReq request);
 
+    //**********************DATA COLLECTION******************************/
 
+    ApiResponse<DefaultResponse> saveDataCollection(Long userId, SurveyDataCollectionReq request);
+    ApiResponseWithPageable<List<Map<String, Object>>> getCollectedData(GetSurveyDataReq request);
 }
